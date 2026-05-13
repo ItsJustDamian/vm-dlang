@@ -74,6 +74,8 @@ namespace dlang
 							t.type = TokenType::KEYWORD;
 						else if (isdigit(m_buffer[0]))
 							t.type = TokenType::NUMBER;
+						else if(m_buffer == "true" || m_buffer == "false")
+							t.type = TokenType::BOOLEAN;
 						else
 							t.type = TokenType::IDENTIFIER;
 

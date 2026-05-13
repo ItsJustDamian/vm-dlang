@@ -91,13 +91,14 @@ namespace dlang
 					throw std::runtime_error("Variable not found: " + name);
 			}
 
-			void registerNativeFunction(const std::string& name, void* function, int numArgs = 0)
+			/* Namespace * = global, any other is whatever you assign */
+			void registerNativeFunction(const std::string& name, void* function, std::string nameSpace = "*", int numArgs = 0)
 			{
 				DlangFunction func;
 				func.isNative = true;
 				func.nativePtr = function;
 				func.numArgs = numArgs;
-				func.name = name;
+				func.name = (nameSpace == "*" ? name : nameSpace + "." + name);
 				m_functions[name] = func;
 			}
 
@@ -130,6 +131,19 @@ namespace dlang
 						}
 						else
 							throw std::runtime_error("Failed to read integer from bytecode at position: " + std::to_string(i));
+					} break;
+
+					case Opcode::PUSH_STRING: {
+						uint8_t size = bytes[i + 1];
+						std::string val = std::string(bytes.begin() + i + 2, bytes.begin() + i + 2 + size);
+						i += size + 1;
+						push(DlangObject(val));
+					} break;
+
+					case Opcode::PUSH_BOOL: {
+						auto val = bytes[i+1] != 0;
+						i++;
+						push(DlangObject(val ? 1 : 0));
 					} break;
 
 					case Opcode::ADD: {
@@ -220,6 +234,46 @@ namespace dlang
 						push(DlangObject(left.intValue < right.intValue ? 1 : 0));
 					} break;
 
+					case Opcode::GREATER_THAN: {
+						if(m_stack.size() < 2)
+							throw std::runtime_error("Not enough values on the stack to perform addition.");
+
+						auto right = pop();
+						auto left = pop();
+
+						push(DlangObject(left.intValue > right.intValue ? 1 : 0));
+					} break;
+
+					case Opcode::LESS_OR_EQUAL_THAN: {
+						if(m_stack.size() < 2)
+							throw std::runtime_error("Not enough values on the stack to perform addition.");
+
+						auto right = pop();
+						auto left = pop();
+
+						push(DlangObject(left.intValue <= right.intValue ? 1 : 0));
+					} break;
+
+					case Opcode::GREATER_OR_EQUAL_THAN: {
+						if (m_stack.size() < 2)
+							throw std::runtime_error("Not enough values on the stack to perform addition.");
+
+						auto right = pop();
+						auto left = pop();
+
+						push(DlangObject(left.intValue >= right.intValue ? 1 : 0));
+					} break;
+
+					case Opcode::NOT_EQUALS_TO: {
+						if(m_stack.size() < 2)
+							throw std::runtime_error("Not enough values on the stack to perform addition.");
+
+						auto right = pop();
+						auto left = pop();
+
+						push(DlangObject(left.intValue != right.intValue ? 1 : 0));
+					} break;
+
 					case Opcode::COMPARE: {
 						if (m_stack.size() < 2)
 							throw std::runtime_error("Not enough values on the stack to perform addition.");
@@ -258,20 +312,15 @@ namespace dlang
 
 						if (func.nativePtr != nullptr)
 						{
-							using fn = void(*)(DLangVirtualMachine*);
-							reinterpret_cast<fn>(func.nativePtr)(this);
+							using fn = bool(*)(DLangVirtualMachine*);
+							auto result = reinterpret_cast<fn>(func.nativePtr)(this);
+
+							if(!result)
+								throw std::runtime_error("Native function '" + funcName + "' returned false, indicating an error during execution.");
 						}
 						else {
 							// Execute local funcs (add later)
 						}
-
-					} break;
-
-					case Opcode::PUSH_STRING: {
-						uint8_t size = bytes[i + 1];
-						std::string val = std::string(bytes.begin() + i + 2, bytes.begin() + i + 2 + size);
-						i += size + 1;
-						push(DlangObject(val));
 					} break;
 
 					default:

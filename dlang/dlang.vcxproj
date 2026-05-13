@@ -136,6 +136,7 @@
     <ClInclude Include="dlang\lexer.hpp" />
     <ClInclude Include="dlang\parser.hpp" />
     <ClInclude Include="dlang\structs.hpp" />
+    <ClInclude Include="dlang\utils\utils.hpp" />
     <ClInclude Include="dlang\vm.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

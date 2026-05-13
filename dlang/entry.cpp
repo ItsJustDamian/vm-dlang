@@ -4,51 +4,14 @@
 #include "dlang/vm.hpp"
 #include "dlang/lexer.hpp"
 #include "dlang/parser.hpp"
-
-std::vector<std::uint8_t> testBytes = {
-	dlang::Opcode::PUSH_INT, 0x00, 0x00, 0x00, 0x00,
-	dlang::Opcode::STORE_VAR, 0x01, 'a',
-
-	// Make it add 1 to a and loop back using jump
-	dlang::Opcode::LOAD_VAR, 0x01, 'a',
-	dlang::Opcode::PUSH_INT, 0x01, 0x00, 0x00, 0x00,
-	dlang::Opcode::ADD,
-
-	dlang::Opcode::STORE_VAR, 0x01, 'a',
-	dlang::Opcode::JUMP, 0x08, 0x00, 0x00, 0x00,
-	
-	dlang::Opcode::EOC						  // EOC
-};
-
-void print(dlang::vm::DLangVirtualMachine* vm)
-{
-	while (vm->getStackSize() > 0)
-	{
-		auto obj = vm->pop();
-		switch (obj.type)
-		{
-		case dlang::DlangType::Integer:
-			printf("%i", obj.intValue);
-			break;
-		case dlang::DlangType::String:
-			printf("%s", (*obj.strValue).c_str());
-			break;
-		case dlang::DlangType::Float:
-			printf("%.001f", obj.floatValue);
-			break;
-		case dlang::DlangType::Boolean:
-			printf("%s", (obj.boolValue ? "true" : "false"));
-			break;
-		}
-	}
-}
+#include "dlang/utils/utils.hpp"
 
 int main(int argc, char** argv)
 {
 	auto start = std::chrono::high_resolution_clock::now();
 
 	dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
-	vm.registerNativeFunction("print", (void*)print, 1);
+	dlang::functions::utils::initFunctions(&vm);
 
 	dlang::lexer::Lexer lexer = dlang::lexer::Lexer("test.dlang");
 	lexer.CompileInput();

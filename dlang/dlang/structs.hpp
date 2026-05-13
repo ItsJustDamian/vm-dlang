@@ -36,8 +36,12 @@ namespace dlang
 		JUMP = 0x20,
 		COMPARE = 0x21,
 		JUMP_IF_FALSE = 0x22,
-		LESS_THAN = 0x23,
 		CALL = 0x30,
+		LESS_THAN = 0x23,
+		GREATER_THAN = 0x24,
+		LESS_OR_EQUAL_THAN = 0x25,
+		GREATER_OR_EQUAL_THAN = 0x26,
+		NOT_EQUALS_TO = 0x27,
 	};
 
 	struct DlangObject

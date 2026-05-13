@@ -192,12 +192,19 @@ namespace dlang
 			{
 				parseAddition();
 
-				while (!isAtEnd() && (peek().value[0] == '<' || peek().value[0] == '>' || peek().value == "=="))
+				while (!isAtEnd() && (peek().value[0] == '<' || 
+									peek().value[0] == '>' ||
+									peek().value == "==" ||
+									peek().value == "!="))
 				{
 					auto op = consume();
 					parseAddition();
-					if (op.value == "<") m_bytecode.push_back(Opcode::LESS_THAN);
+					if (op.value.size() == 1 && op.value[0] == '<') m_bytecode.push_back(Opcode::LESS_THAN);
+					if (op.value.size() == 1 && op.value[0] == '>') m_bytecode.push_back(Opcode::GREATER_THAN);
+					if (op.value == "<=") m_bytecode.push_back(Opcode::LESS_OR_EQUAL_THAN);
+					if (op.value == ">=") m_bytecode.push_back(Opcode::GREATER_OR_EQUAL_THAN);
 					if (op.value == "==") m_bytecode.push_back(Opcode::COMPARE);
+					if (op.value == "!=") m_bytecode.push_back(Opcode::NOT_EQUALS_TO);
 					// later add other compare options
 				}
 
