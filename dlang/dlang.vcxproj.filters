@@ -44,5 +44,11 @@
     <ClInclude Include="dlang\utils\utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dlang\utils\graphics.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.dlang" />
   </ItemGroup>
 </Project>

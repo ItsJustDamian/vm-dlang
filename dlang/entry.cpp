@@ -5,6 +5,7 @@
 #include "dlang/lexer.hpp"
 #include "dlang/parser.hpp"
 #include "dlang/utils/utils.hpp"
+#include "dlang/utils/graphics.hpp"
 
 int main(int argc, char** argv)
 {
@@ -12,6 +13,7 @@ int main(int argc, char** argv)
 
 	dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
 	dlang::functions::utils::initFunctions(&vm);
+	dlang::functions::graphics::initFunctions(&vm);
 
 	dlang::lexer::Lexer lexer = dlang::lexer::Lexer("test.dlang");
 	lexer.CompileInput();
@@ -20,6 +22,11 @@ int main(int argc, char** argv)
 
 	try {
 		parser.Parse();
+
+		for (const auto& byte : parser.GetBytecode())
+			std::cout << std::hex << static_cast<int>(byte) << ", ";
+		printf("\n");
+
 		vm.eval(parser.GetBytecode());
 
 		auto end = std::chrono::high_resolution_clock::now();

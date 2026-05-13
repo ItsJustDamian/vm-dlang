@@ -42,6 +42,9 @@ namespace dlang
 		LESS_OR_EQUAL_THAN = 0x25,
 		GREATER_OR_EQUAL_THAN = 0x26,
 		NOT_EQUALS_TO = 0x27,
+		DEF_FUNC = 0x40,
+		END_FUNC = 0x41,
+		RETURN = 0x42
 	};
 
 	struct DlangObject
@@ -69,11 +72,13 @@ namespace dlang
 	{
 		std::string name;
 		size_t numArgs = 0;
-		size_t locationIp = 0;
+		size_t startInstruction = 0;
+		size_t bodySize = 0;
 		bool isNative = false;
 		void* nativePtr = nullptr;
+		std::vector<std::string> argNames;
 
 		DlangFunction() = default;
-		DlangFunction(const std::string& funcName, size_t args, size_t ip) : name(funcName), numArgs(args), locationIp(ip) {}
+		DlangFunction(const std::string& funcName, size_t args, size_t ip) : name(funcName), numArgs(args), startInstruction(ip) {}
 	};
 }

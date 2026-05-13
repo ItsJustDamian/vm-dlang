@@ -57,6 +57,8 @@ namespace dlang
 						parseWhile();
 					else if (token.type == lexer::TokenType::KEYWORD && tokenHash == consts::KEYWORD_IF)
 						parseIf();
+					else if (token.type == lexer::TokenType::KEYWORD && tokenHash == consts::KEYWORD_FUNC)
+						parseFunctionDefinition();
 					else if (token.type == lexer::TokenType::IDENTIFIER && peek(1).value == "=")
 						parseDeclaration(false);
 					else
@@ -160,6 +162,12 @@ namespace dlang
 					m_bytecode.push_back(Opcode::LOAD_VAR);
 					emitString(token.value);
 				}
+				else if (token.type == lexer::TokenType::KEYWORD && token.value == "return")
+					parseReturn();
+				else if (token.type == lexer::TokenType::KEYWORD && token.value == "while")
+					parseWhile();
+				else if(token.type == lexer::TokenType::KEYWORD && token.value == "if")
+					parseIf();
 				else
 					throw std::runtime_error("Unexpected token: " + token.value + " at line: " + std::to_string(token.line));
 			}
@@ -231,7 +239,7 @@ namespace dlang
 
 			void parseWhile()
 			{
-				consume(); // Consume 'while' keyword
+				if (peek().type == lexer::TokenType::KEYWORD && peek().value == "while") consume(); // Consume 'while' token
 				consume(); // Consume '(' token
 
 				size_t loopStart = m_bytecode.size();
@@ -264,7 +272,7 @@ namespace dlang
 
 			void parseIf()
 			{
-				consume(); // Consume 'if' token
+				if (peek().type == lexer::TokenType::KEYWORD && peek().value == "if") consume(); // Consume 'if' token
 				consume(); // Consume '(' token
 				parseExpression();
 				consume(); // Consume ')' token
@@ -291,6 +299,66 @@ namespace dlang
 
 				int32_t endOfIf = static_cast<int32_t>(m_bytecode.size());
 				helpers::memory::patchInt32LE(endOfIf, m_bytecode, jumpIfFalsePos);
+			}
+
+			void parseFunctionDefinition()
+			{
+				consume(); // Consume 'func' token
+				auto funcNameToken = consume(); // Consume function name
+				consume(); // Consume '(' token
+				
+				std::vector<std::string> paramNames;
+				while (!isAtEnd() && peek().value[0] != ')')
+				{
+					auto paramToken = consume(); // Consume parameter name
+					if (peek().value[0] == ',') consume(); // Consume ',' token if there are more parameters
+					paramNames.push_back(paramToken.value);
+				}
+
+				consume(); // Consume ')' token
+				consume(); // Consume '{' token
+
+				m_bytecode.push_back(Opcode::DEF_FUNC);
+				emitString(funcNameToken.value);
+				m_bytecode.push_back(paramNames.size()); // Placeholder for number of arguments, update later when we add parameter parsing
+
+				for (const auto& param : paramNames)
+					emitString(param);
+
+				size_t skipPatchPos = m_bytecode.size();
+				helpers::memory::writeInt32LE(0, m_bytecode);
+
+				while(!isAtEnd() && peek().value[0 ] != '}')
+				{
+					auto t = peek();
+					if (t.type == lexer::TokenType::KEYWORD && t.value == "var") parseDeclaration();
+					else if (t.type == lexer::TokenType::IDENTIFIER && peek(1).value == "=") parseAssignment();
+					else if (t.type == lexer::TokenType::IDENTIFIER && peek(1).value == "(")
+					{
+						std::string funcName = consume().value;
+						parseFunctionCall(funcName);
+					}
+					else parseExpression();
+				}
+
+				consume(); // Consume '}' token
+				m_bytecode.push_back(Opcode::END_FUNC);
+
+				uint32_t bodySize = static_cast<uint32_t>(m_bytecode.size() - (skipPatchPos + 4));
+				helpers::memory::patchInt32LE(bodySize, m_bytecode, skipPatchPos);
+			}
+
+			void parseReturn()
+			{
+				if (peek().value != "}" && peek().value != ";") {
+					parseExpression();
+				}
+				else {
+					m_bytecode.push_back(Opcode::PUSH_INT);
+					helpers::memory::writeInt32LE(0, m_bytecode);
+				}
+
+				m_bytecode.push_back(Opcode::RETURN);
 			}
 		};
 	}

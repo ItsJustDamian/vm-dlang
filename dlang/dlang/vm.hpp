@@ -15,7 +15,9 @@ namespace dlang
 		private:
 			std::vector<DlangObject> m_stack;
 			std::unordered_map<std::string, DlangObject> m_globalVariables;
+			std::unordered_map<std::string, DlangObject> m_scopeVariables;
 			std::unordered_map<std::string, DlangFunction> m_functions;
+			std::vector<int> m_returnAddressStack;
 			int m_stackPointer = -1;
 
 		public:
@@ -78,13 +80,19 @@ namespace dlang
 					return false;
 			}
 
-			void storeVariable(const std::string& name, const DlangObject& value)
+			void storeVariable(const std::string& name, const DlangObject& value, const bool& localScope = false)
 			{
-				m_globalVariables[name] = value;
+				if(m_returnAddressStack.size() > 0 || localScope)
+					m_scopeVariables[name] = value;
+				else
+					m_globalVariables[name] = value;
 			}
 
 			DlangObject loadVariable(const std::string& name)
 			{
+				if (m_scopeVariables.find(name) != m_scopeVariables.end())
+					return m_scopeVariables[name];
+				
 				if (m_globalVariables.find(name) != m_globalVariables.end())
 					return m_globalVariables[name];
 				else
@@ -98,8 +106,8 @@ namespace dlang
 				func.isNative = true;
 				func.nativePtr = function;
 				func.numArgs = numArgs;
-				func.name = (nameSpace == "*" ? name : nameSpace + "." + name);
-				m_functions[name] = func;
+				func.name = name;
+				m_functions[(nameSpace == "*" ? name : nameSpace + "." + name)] = func;
 			}
 
 			int getStackSize() const
@@ -209,11 +217,7 @@ namespace dlang
 						auto varName = std::string(bytes.begin() + i + 2, bytes.begin() + i + 2 + size);
 						i += size + 1;
 
-						auto it = m_globalVariables.find(varName);
-						if (it != m_globalVariables.end())
-							push(it->second);
-						else
-							throw std::runtime_error("Variable not found: '" + varName + "'");
+						push(loadVariable(varName));
 					} break;
 
 					case Opcode::JUMP: {
@@ -319,8 +323,63 @@ namespace dlang
 								throw std::runtime_error("Native function '" + funcName + "' returned false, indicating an error during execution.");
 						}
 						else {
-							// Execute local funcs (add later)
+							for (int i = 0; i < func.numArgs; i++)
+							{
+								auto val = pop();
+								auto name = func.argNames[func.numArgs - 1 - i];
+
+								storeVariable(name, val, true);
+							}
+
+							m_returnAddressStack.push_back(i++); // Push the return address (next instruction) onto the return stack
+							i = func.startInstruction-1; // Jump to the function's starting instruction
 						}
+					} break;
+
+					case Opcode::DEF_FUNC: {
+						size_t cursor = i + 1;
+
+						uint8_t nameSize = bytes[cursor++];
+						std::string funcName(bytes.begin() + cursor, bytes.begin() + cursor + nameSize);
+						cursor += nameSize;
+
+						uint8_t argCount = bytes[cursor++];
+
+						std::vector<std::string> argNames;
+						for (int j = 0; j < argCount; j++) {
+							uint8_t argNameSize = bytes[cursor++];
+							std::string argName(bytes.begin() + cursor, bytes.begin() + cursor + argNameSize);
+							argNames.push_back(argName);
+							cursor += argNameSize;
+						}
+
+						int32_t skipSize = 0;
+						if (!helpers::memory::readInt32LE(bytes, cursor, &skipSize))
+							throw std::runtime_error("Failed to read skipSize at " + std::to_string(cursor));
+						cursor += 4;
+
+						DlangFunction func;
+						func.isNative = false;
+						func.name = funcName;
+						func.numArgs = argCount;
+						func.argNames = argNames;
+						func.bodySize = skipSize;
+						func.startInstruction = cursor;
+						m_functions[funcName] = func;
+
+						i = cursor + skipSize - 1;
+
+					} break;
+
+					case Opcode::RETURN:
+					case Opcode::END_FUNC: {
+						if (m_returnAddressStack.empty())
+							throw std::runtime_error("Return address stack is empty, cannot return from function.");
+
+						// take back of return address and pop it
+						i = m_returnAddressStack.back(); // Get the return address from the top of the return stack
+						m_returnAddressStack.pop_back(); // Remove the return address from the stack
+						m_scopeVariables.clear();
 					} break;
 
 					default:

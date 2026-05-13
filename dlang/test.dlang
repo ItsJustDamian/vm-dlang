@@ -1,36 +1,43 @@
-var a = 0
-var b = 'hello world '
-var c = 69
+var testReturn = 1337
+var a = 2
 
-var testBool = false
-print(testBool + '\n')
+func NestedTestFunc(a, b) {
+	print('nested test function works' + a + '\n')
+	print('stage 2: ' + b + '\n')
 
-testBool = true
-print(testBool + '\n')
+	var z = 0
+	while (z < 10) {
+		z = z + 1
+		print('nested test function looped ' + z + ' times\n')
+	}
 
-if (a == 1) {
-	print('a (Actual Value ' + a + ') is greater than 1\n')
+	return testReturn
 }
 
-if (a <= 1) {
-	print('a (Actual Value ' + a + ') is less than or equal to 1\n')
+func TestFunctionDefine() {
+	var c = 123
+	var d = 124
+
+	if (d > c) {
+		print('test function works\n')
+	}
+
+	var test = NestedTestFunc(123, 456)
+	print('nested test function returned: ' + test + '\n')
 }
 
-if(c >= 60) {
-	print('c (Actual Value ' + c + ') is greater than or equal to 60\n')
+TestFunctionDefine()
+print('test function define works and returned to correct address\n')
+print('Global a is: ' + a + '\n')
+
+if (a == 2) {
+	print('global variable a is correct\n')
 }
 
-if (c >= 69) {
-	print('c (Actual Value ' + c + ') is greater than or equal to 69\n')
+var i = 0
+while(i < 1) {
+	print('test loop works\n')
+	i = i + 1
 }
 
-if (a != 69) {
-	print('a (Actual Value ' + a + ') is not equal to 69\n')
-}
-
-while (a < 10) {
-	a = a + 1
-	print(b + a + '\n')
-}
-
-a + 1 - 1
+messagebox('test', 'lol')

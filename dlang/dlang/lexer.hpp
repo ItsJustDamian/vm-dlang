@@ -70,7 +70,9 @@ namespace dlang
 							t.type = TokenType::STRING;
 						else if (token == consts::KEYWORD_VAR ||
 								token == consts::KEYWORD_WHILE || 
-								token == consts::KEYWORD_IF)
+								token == consts::KEYWORD_IF ||
+								token == consts::KEYWORD_FUNC ||
+								token == consts::KEYWORD_RETURN)
 							t.type = TokenType::KEYWORD;
 						else if (isdigit(m_buffer[0]))
 							t.type = TokenType::NUMBER;
