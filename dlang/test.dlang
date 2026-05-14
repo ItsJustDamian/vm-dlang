@@ -1,3 +1,5 @@
+include('demo.dlang')
+
 var testReturn = 1337
 var a = 2
 

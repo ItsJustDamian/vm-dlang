@@ -21,7 +21,8 @@ namespace dlang
 			STRING = 5,
 			FLOAT = 6,
 			BOOLEAN = 7,
-			SYMBOL = 8
+			SYMBOL = 8,
+			INCLUDE = 9
 		};
 
 		struct Token
@@ -78,6 +79,8 @@ namespace dlang
 							t.type = TokenType::NUMBER;
 						else if(m_buffer == "true" || m_buffer == "false")
 							t.type = TokenType::BOOLEAN;
+						else if (m_buffer == "include")
+							t.type = TokenType::INCLUDE;
 						else
 							t.type = TokenType::IDENTIFIER;
 

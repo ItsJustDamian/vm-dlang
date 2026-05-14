@@ -59,6 +59,8 @@ namespace dlang
 						parseIf();
 					else if (token.type == lexer::TokenType::KEYWORD && tokenHash == consts::KEYWORD_FUNC)
 						parseFunctionDefinition();
+					else if (token.type == lexer::TokenType::INCLUDE)
+						parseInclude();
 					else if (token.type == lexer::TokenType::IDENTIFIER && peek(1).value == "=")
 						parseDeclaration(false);
 					else
@@ -359,6 +361,22 @@ namespace dlang
 				}
 
 				m_bytecode.push_back(Opcode::RETURN);
+			}
+
+			void parseInclude()
+			{
+				consume(); // Consume 'include' token
+				consume(); // Consume '(' token
+				auto filePathToken = consume(); // Consume file path string token
+				consume(); // Consume ')' token
+
+				lexer::Lexer includedLexer(filePathToken.value.substr(1, filePathToken.value.size() - 2));
+				includedLexer.CompileInput();
+				auto tokens = includedLexer.GetTokens();
+
+				printf("Including file: %s with %zu tokens\n", filePathToken.value.c_str(), tokens.size());
+
+				m_tokens.insert(m_tokens.begin() + m_pos, tokens.begin(), tokens.end());
 			}
 		};
 	}
