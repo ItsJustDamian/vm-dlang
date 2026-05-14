@@ -49,6 +49,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="demo2.dlang" />
     <None Include="test.dlang" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,45 @@
+include('demo.dlang')
+
+var testReturn = 1337
+var a = 2
+
+func NestedTestFunc(a, b) {
+	print('nested test function works' + a + '\n')
+	print('stage 2: ' + b + '\n')
+
+	var z = 0
+	while (z < 10) {
+		z = z + 1
+		print('nested test function looped ' + z + ' times\n')
+	}
+
+	return testReturn
+}
+
+func TestFunctionDefine() {
+	var c = 123
+	var d = 124
+
+	if (d > c) {
+		print('test function works\n')
+	}
+
+	var test = NestedTestFunc(123, 456)
+	print('nested test function returned: ' + test + '\n')
+}
+
+TestFunctionDefine()
+print('test function define works and returned to correct address\n')
+print('Global a is: ' + a + '\n')
+
+if (a == 2) {
+	print('global variable a is correct\n')
+}
+
+var i = 0
+while(i < 1) {
+	print('test loop works\n')
+	i = i + 1
+}
+
+messagebox('test', 'lol')

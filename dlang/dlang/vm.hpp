@@ -75,6 +75,18 @@ namespace dlang
 					return false;
 			}
 
+			bool checkStack(const std::vector<DlangType> expectedTypes)
+			{
+				if (m_stack.size() < expectedTypes.size())
+					return false;
+				for (int i = 0; i < expectedTypes.size(); i++)
+				{
+					if (m_stack[m_stackPointer - i].type != expectedTypes[i])
+						return false;
+				}
+				return true;
+			}
+
 		private:
 			int addToStringPool(const std::string& str)
 			{

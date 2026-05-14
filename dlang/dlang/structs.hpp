@@ -20,7 +20,8 @@ namespace dlang
 		String = 3,
 		Boolean = 4,
 		DlangFunction = 5,
-		ScopeVariable = 6
+		ScopeVariable = 6,
+		Pointer = 7
 	};
 
 	enum Opcode : uint8_t
@@ -65,6 +66,7 @@ namespace dlang
 		
 		DlangObject() : type(DlangType::None), ptrValue(0) {}
 		DlangObject(int value, DlangType _type = DlangType::Integer) : type(_type), intValue(value) {}
+		DlangObject(DWORD64 value) : type(DlangType::Pointer) { ptrValue = value; }
 	};
 
 	struct DlangFunction
