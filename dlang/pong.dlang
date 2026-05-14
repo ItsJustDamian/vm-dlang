@@ -1,0 +1,41 @@
+var backgroundColor = gfx.color(60, 187, 207)
+var playerColor = gfx.color(255, 255, 255)
+
+var player1X = 0
+var player1Y = 250
+
+gfx.init('Pong', 800, 600)
+
+func DrawPlayer() {
+    gfx.draw_rect(player1X, player1Y, 20, 100, playerColor)
+}
+
+func UpdateKeyboard() {
+    if (gfx.key_down(87)) {
+        player1Y = player1Y - 5
+    }
+
+    if (gfx.key_down(83)) {
+        player1Y = player1Y + 5
+    }
+
+    if(player1Y < 0) {
+        player1Y = 0
+    }
+
+    if(player1Y > 500) {
+        player1Y = 500
+    }
+}
+
+while (1) {
+    gfx.begin()
+    gfx.clear(backgroundColor)
+
+    DrawPlayer()
+    UpdateKeyboard()
+
+    gfx.end()
+    gfx.update()
+    var deltaTime = gfx.get_deltatime()
+}

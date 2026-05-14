@@ -104,6 +104,13 @@ namespace dlang
 
 			void storeVariable(const std::string& name, const DlangObject& value, const bool& localScope = false)
 			{
+				auto it = m_globalVariables.find(name);
+				if (it != m_globalVariables.end() && !localScope)
+				{
+					it->second = value;
+					return;
+				}
+
 				if(m_returnAddressStack.size() > 0 || localScope)
 					m_scopeVariables[name] = value;
 				else
@@ -196,30 +203,30 @@ namespace dlang
 						if (m_stack.size() < 2)
 							throw std::runtime_error("Not enough values on the stack to perform addition.");
 
-						auto obj1 = pop();
-						auto obj2 = pop();
+						auto right = pop();
+						auto left = pop();
 
-						push(DlangObject(obj1.intValue - obj2.intValue));
+						push(DlangObject(left.intValue - right.intValue));
 					} break;
 
 					case Opcode::MP: {
 						if (m_stack.size() < 2)
 							throw std::runtime_error("Not enough values on the stack to perform addition.");
 
-						auto obj1 = pop();
-						auto obj2 = pop();
+						auto right = pop();
+						auto left = pop();
 
-						push(DlangObject(obj1.intValue * obj2.intValue));
+						push(DlangObject(left.intValue * right.intValue));
 					} break;
 
 					case Opcode::DIV: {
 						if (m_stack.size() < 2)
 							throw std::runtime_error("Not enough values on the stack to perform addition.");
 
-						auto obj1 = pop();
-						auto obj2 = pop();
+						auto right = pop();
+						auto left = pop();
 
-						push(DlangObject(obj1.intValue / obj2.intValue));
+						push(DlangObject(left.intValue / right.intValue));
 					} break;
 
 					case Opcode::STORE_VAR: {

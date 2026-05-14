@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 	dlang::functions::utils::initFunctions(&vm);
 	dlang::functions::graphics::initFunctions(&vm);
 
-	dlang::lexer::Lexer lexer = dlang::lexer::Lexer("test.dlang");
+	dlang::lexer::Lexer lexer = dlang::lexer::Lexer("pong.dlang");
 	lexer.CompileInput();
 
 	dlang::parser::Parser parser = dlang::parser::Parser(lexer.GetTokens());
