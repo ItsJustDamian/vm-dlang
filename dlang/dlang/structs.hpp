@@ -4,8 +4,14 @@
 #include <vector>
 #include <unordered_map>
 
+typedef unsigned __int64 DWORD64, * PDWORD64;
+
 namespace dlang
 {
+	namespace vm { class DLangVirtualMachine; }
+
+	using NativeCallback = bool(*)(vm::DLangVirtualMachine*);
+
 	enum class DlangType : unsigned char
 	{
 		None = 0,
@@ -52,20 +58,13 @@ namespace dlang
 		DlangType type;
 		union
 		{
+			void* objPtr;
 			int intValue;
-			std::string* strValue;
-			void* objValue;
-			std::vector<void*>* arrValue;
-			void* funcValue;
-			float floatValue;
-			bool boolValue;
+			DWORD64 ptrValue;
 		};
 		
-		DlangObject() : type(DlangType::None), objValue(0) {}
-		DlangObject(int value) : type(DlangType::Integer), intValue(value) {}
-		DlangObject(float value) : type(DlangType::Float), floatValue(value) {}
-		DlangObject(const std::string& value) : type(DlangType::String), strValue(new std::string(value)) {}
-		DlangObject(bool value) : type(DlangType::Boolean), boolValue(value) {}
+		DlangObject() : type(DlangType::None), ptrValue(0) {}
+		DlangObject(int value, DlangType _type = DlangType::Integer) : type(_type), intValue(value) {}
 	};
 
 	struct DlangFunction
@@ -75,7 +74,7 @@ namespace dlang
 		size_t startInstruction = 0;
 		size_t bodySize = 0;
 		bool isNative = false;
-		void* nativePtr = nullptr;
+		NativeCallback nativePtr = nullptr;
 		std::vector<std::string> argNames;
 
 		DlangFunction() = default;

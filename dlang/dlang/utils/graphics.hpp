@@ -13,6 +13,6 @@ namespace dlang::functions::graphics
 
 	inline void initFunctions(vm::DLangVirtualMachine* vm)
 	{
-		vm->registerNativeFunction("CreateWindow", reinterpret_cast<void*>(&native_CreateWindow), "gfx", 0);
+		vm->registerNativeFunction("CreateWindow", native_CreateWindow, "gfx", 0);
 	}
 }

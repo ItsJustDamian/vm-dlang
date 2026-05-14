@@ -374,8 +374,6 @@ namespace dlang
 				includedLexer.CompileInput();
 				auto tokens = includedLexer.GetTokens();
 
-				printf("Including file: %s with %zu tokens\n", filePathToken.value.c_str(), tokens.size());
-
 				m_tokens.insert(m_tokens.begin() + m_pos, tokens.begin(), tokens.end());
 			}
 		};

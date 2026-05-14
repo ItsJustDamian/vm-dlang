@@ -17,6 +17,7 @@ namespace dlang
 			std::unordered_map<std::string, DlangObject> m_globalVariables;
 			std::unordered_map<std::string, DlangObject> m_scopeVariables;
 			std::unordered_map<std::string, DlangFunction> m_functions;
+			std::vector<std::string> m_stringPool;
 			std::vector<int> m_returnAddressStack;
 			int m_stackPointer = -1;
 
@@ -57,13 +58,7 @@ namespace dlang
 						std::cout << "Integer: " << item.intValue << std::endl;
 						break;
 					case DlangType::String:
-						std::cout << "String: " << *item.strValue << std::endl;
-						break;
-					case DlangType::Float:
-						std::cout << "Float: " << item.floatValue << std::endl;
-						break;
-					case DlangType::Boolean:
-						std::cout << "Boolean: " << (item.boolValue ? "true" : "false") << std::endl;
+						std::cout << "String: " << getStringFromPool(item.intValue) << std::endl;
 						break;
 					default:
 						std::cout << "Unknown type on stack." << std::endl;
@@ -78,6 +73,21 @@ namespace dlang
 					return m_stack[m_stackPointer - stackIndex].type == type;
 				else
 					return false;
+			}
+
+		private:
+			int addToStringPool(const std::string& str)
+			{
+				m_stringPool.push_back(str);
+				return static_cast<int>(m_stringPool.size() - 1);
+			}
+		public:
+			std::string getStringFromPool(int index)
+			{
+				if (index >= 0 && index < m_stringPool.size())
+					return m_stringPool[index];
+				else
+					throw std::runtime_error("String pool index out of bounds: " + std::to_string(index));
 			}
 
 			void storeVariable(const std::string& name, const DlangObject& value, const bool& localScope = false)
@@ -100,7 +110,7 @@ namespace dlang
 			}
 
 			/* Namespace * = global, any other is whatever you assign */
-			void registerNativeFunction(const std::string& name, void* function, std::string nameSpace = "*", int numArgs = 0)
+			void registerNativeFunction(const std::string& name, NativeCallback function, std::string nameSpace = "*", int numArgs = 0)
 			{
 				DlangFunction func;
 				func.isNative = true;
@@ -145,7 +155,7 @@ namespace dlang
 						uint8_t size = bytes[i + 1];
 						std::string val = std::string(bytes.begin() + i + 2, bytes.begin() + i + 2 + size);
 						i += size + 1;
-						push(DlangObject(val));
+						push(DlangObject(addToStringPool(val), DlangType::String));
 					} break;
 
 					case Opcode::PUSH_BOOL: {
@@ -162,10 +172,10 @@ namespace dlang
 						auto left = pop();
 
 						if (left.type == DlangType::String || right.type == DlangType::String) {
-							std::string sLeft = (left.type == DlangType::String) ? *left.strValue : std::to_string(left.intValue);
-							std::string sRight = (right.type == DlangType::String) ? *right.strValue : std::to_string(right.intValue);
+							std::string sLeft = (left.type == DlangType::String) ? getStringFromPool(left.intValue) : std::to_string(left.intValue);
+							std::string sRight = (right.type == DlangType::String) ? getStringFromPool(right.intValue) : std::to_string(right.intValue);
 
-							push(DlangObject(sLeft + sRight));
+							push(DlangObject(addToStringPool(sLeft + sRight), DlangType::String));
 						}
 						else push(DlangObject(left.intValue + right.intValue));
 					} break;
