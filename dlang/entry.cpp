@@ -9,13 +9,21 @@
 
 int main(int argc, char** argv)
 {
+	if (argc < 1)
+	{
+		printf("Usage: %s <source_file>\n", argv[0]);
+		return -1;
+	}
+
+	auto fileName = argv[1];
 	auto start = std::chrono::high_resolution_clock::now();
 
 	dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
 	dlang::functions::utils::initFunctions(&vm);
 	dlang::functions::graphics::initFunctions(&vm);
 
-	dlang::lexer::Lexer lexer = dlang::lexer::Lexer("pong.dlang");
+
+	dlang::lexer::Lexer lexer = dlang::lexer::Lexer(fileName);
 	lexer.CompileInput();
 
 	dlang::parser::Parser parser = dlang::parser::Parser(lexer.GetTokens());

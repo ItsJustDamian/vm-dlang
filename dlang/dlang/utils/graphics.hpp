@@ -4,11 +4,13 @@
 #include <Windowsx.h>
 #include <d2d1.h>
 #include <dwrite.h>
+#include <wincodec.h>
 #include <chrono>
 #include "../vm.hpp"
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "windowscodecs.lib")
 #undef max
 
 namespace dlang::functions::graphics
@@ -20,6 +22,11 @@ namespace dlang::functions::graphics
 		ID2D1SolidColorBrush* brush = nullptr;
 		IDWriteFactory* pDWriteFactory = nullptr;
 		IDWriteTextFormat* pTextFormat = nullptr;
+		bool windowClosed = false;
+		IWICImagingFactory* wicFactory = nullptr;
+		std::vector<ID2D1Bitmap*> textures;
+		int width = 800;
+		int height = 600;
 	};
 
 	struct GfxInput
@@ -30,6 +37,16 @@ namespace dlang::functions::graphics
 		float mouseX = 0.0f;
 		float mouseY = 0.0f;
 	};
+
+	struct Color
+	{
+		int r, g, b, a;
+	};
+
+	static std::vector<Color> colors;
+	static GfxState gfx;
+	static std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
+	static float deltaTime = 0.0f;
 	static GfxInput input;
 
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -38,6 +55,7 @@ namespace dlang::functions::graphics
 		{
 		case WM_DESTROY:
 			PostQuitMessage(0);
+			gfx.windowClosed = true;
 			return 0;
 			break;
 		case WM_KEYDOWN:
@@ -68,16 +86,6 @@ namespace dlang::functions::graphics
 		}
 	}
 
-	struct Color
-	{
-		int r, g, b, a;
-	};
-
-	static std::vector<Color> colors;
-	static GfxState gfx;
-	static std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
-	static float deltaTime = 0.0f;
-
 	inline void initFunctions(vm::DLangVirtualMachine* vm)
 	{
 		vm->registerNativeFunction("color", [](vm::DLangVirtualMachine* vm) -> bool {
@@ -105,9 +113,14 @@ namespace dlang::functions::graphics
 			if (!vm->checkStack({ DlangType::Integer, DlangType::Integer, DlangType::String }))
 				throw std::runtime_error("Invalid arguments for gfx.init, expected (string title, int width, int height)");
 
+			HRESULT hrCom = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
 			auto height = vm->pop();
 			auto width = vm->pop();
 			auto title = vm->pop();
+
+			gfx.width = width.intValue;
+			gfx.height = height.intValue;
 
 			D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &gfx.factory);
 
@@ -146,6 +159,20 @@ namespace dlang::functions::graphics
 				L"en-us",                   // Locale
 				&gfx.pTextFormat
 			);
+
+			HRESULT hrFactory = CoCreateInstance(
+				CLSID_WICImagingFactory,
+				NULL,
+				CLSCTX_INPROC_SERVER,
+				IID_PPV_ARGS(&gfx.wicFactory)
+			);
+
+			if (FAILED(hrFactory)) {
+				char errorMsg[256];
+				sprintf_s(errorMsg, "WIC Factory creation failed! HRESULT: 0x%08X\n", hrFactory);
+				MessageBoxA(NULL, errorMsg, "GFX Error", MB_ICONERROR);
+				return false; // Stop de init zodat we niet later crashen
+			}
 
 			return true;
 			}, "gfx", 3);
@@ -250,19 +277,19 @@ namespace dlang::functions::graphics
 
 		vm->registerNativeFunction("draw_text", [](vm::DLangVirtualMachine* vm) -> bool {
 			auto stackSize = vm->getStackSize();
-			
+
 			DlangObject hAlignObj(0);
 			DlangObject vAlignObj(0);
 
-			if(stackSize > 5) vAlignObj = vm->pop(); // 0 = Top, 1 = Center, 2 = Bottom
-			if(stackSize > 4) hAlignObj = vm->pop(); // 0 = Left, 1 = Center, 2 = Right
+			if (stackSize > 5) vAlignObj = vm->pop();
+			if (stackSize > 4) hAlignObj = vm->pop();
 			auto colorObj = vm->pop();
 			auto yObj = vm->pop();
 			auto xObj = vm->pop();
 			auto textObj = vm->pop();
 
 			auto color = D2D1::ColorF(colors[colorObj.intValue].r / 255.0f, colors[colorObj.intValue].g / 255.0f, colors[colorObj.intValue].b / 255.0f, colors[colorObj.intValue].a / 255.0f);
-			
+
 			if (!gfx.brush)
 				gfx.renderTarget->CreateSolidColorBrush(color, &gfx.brush);
 			else
@@ -271,23 +298,25 @@ namespace dlang::functions::graphics
 			float x = (xObj.type == DlangType::Float) ? xObj.floatValue : (float)xObj.intValue;
 			float y = (yObj.type == DlangType::Float) ? yObj.floatValue : (float)yObj.intValue;
 
-			DWRITE_TEXT_ALIGNMENT hAlign = DWRITE_TEXT_ALIGNMENT_LEADING; // Default Left
+			DWRITE_TEXT_ALIGNMENT hAlign = DWRITE_TEXT_ALIGNMENT_LEADING;
 			if (hAlignObj.intValue == 1) hAlign = DWRITE_TEXT_ALIGNMENT_CENTER;
 			else if (hAlignObj.intValue == 2) hAlign = DWRITE_TEXT_ALIGNMENT_TRAILING;
 			gfx.pTextFormat->SetTextAlignment(hAlign);
 
-			DWRITE_PARAGRAPH_ALIGNMENT vAlign = DWRITE_PARAGRAPH_ALIGNMENT_NEAR; // Default Top
+			DWRITE_PARAGRAPH_ALIGNMENT vAlign = DWRITE_PARAGRAPH_ALIGNMENT_NEAR;
 			if (vAlignObj.intValue == 1) vAlign = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
 			else if (vAlignObj.intValue == 2) vAlign = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
 			gfx.pTextFormat->SetParagraphAlignment(vAlign);
-			
-			D2D1_RECT_F layoutRect;
-			if (hAlign == DWRITE_TEXT_ALIGNMENT_TRAILING)
-				layoutRect = D2D1::RectF(0.0f, y, x, y + 100.0f);
-			else if (hAlign == DWRITE_TEXT_ALIGNMENT_CENTER)
-				layoutRect = D2D1::RectF(0.0f, y, 800.0f, y + 100.0f);
-			else
-				layoutRect = D2D1::RectF(x, y, 800.0f, y + 100.0f);
+
+			D2D1_SIZE_F rtSize = gfx.renderTarget->GetSize();
+			D2D1_RECT_F layoutRect = D2D1::RectF(0.0f, y, rtSize.width, y + 100.0f);
+
+			if (hAlign == DWRITE_TEXT_ALIGNMENT_LEADING) {
+				layoutRect.left = x;
+			}
+			else if (hAlign == DWRITE_TEXT_ALIGNMENT_TRAILING) {
+				layoutRect.right = x;
+			}
 
 			std::string text = vm->getStringFromPool(textObj.intValue);
 			std::wstring widestr = std::wstring(text.begin(), text.end());
@@ -332,5 +361,107 @@ namespace dlang::functions::graphics
 			vm->push(DlangObject(deltaTime));
 			return true;
 			}, "gfx", 0);
+
+		vm->registerNativeFunction("window_closed", [](vm::DLangVirtualMachine* vm) -> bool {
+			vm->push(DlangObject(gfx.windowClosed ? 1 : 0));
+			return true;
+			}, "gfx", 0);
+
+		vm->registerNativeFunction("load_image", [](vm::DLangVirtualMachine* vm) -> bool {
+			if (!vm->checkStack({ DlangType::String }))
+				throw std::runtime_error("Invalid arguments for gfx.load_image, expected (string filePath)");
+			
+			auto filePathObj = vm->pop();
+			
+			std::string filePath = vm->getStringFromPool(filePathObj.intValue);
+			IWICBitmapDecoder* decoder = nullptr;
+			
+			HRESULT hr = gfx.wicFactory->CreateDecoderFromFilename(std::wstring(filePath.begin(), filePath.end()).c_str(), NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &decoder);
+			if (FAILED(hr)) {
+				printf("Failed to load texture: 0x%08X\n", hr);
+				vm->push(DlangObject(-1));
+				return false;
+			}
+
+			IWICBitmapFrameDecode* frame = nullptr;
+			hr = decoder->GetFrame(0, &frame);
+			if (FAILED(hr)) {
+				printf("Failed to get texture frame: 0x%08X\n", hr);
+				decoder->Release();
+				vm->push(DlangObject(-1));
+				return false;
+			}
+
+			IWICFormatConverter* converter = nullptr;
+			hr = gfx.wicFactory->CreateFormatConverter(&converter);
+
+			if (SUCCEEDED(hr)) {
+				hr = converter->Initialize(
+					frame,
+					GUID_WICPixelFormat32bppPBGRA,
+					WICBitmapDitherTypeNone,
+					NULL,
+					0.0f,
+					WICBitmapPaletteTypeMedianCut
+				);
+			}
+
+			if (FAILED(hr)) {
+				printf("Failed to convert texture format: 0x%08X\n", hr);
+				if (converter) converter->Release();
+				frame->Release();
+				decoder->Release();
+				vm->push(DlangObject(-1));
+				return false;
+			}
+
+			ID2D1Bitmap* d2dBitmap = nullptr;
+			hr = gfx.renderTarget->CreateBitmapFromWicBitmap(converter, NULL, &d2dBitmap);
+			if (FAILED(hr)) {
+				printf("Failed to create D2D bitmap: 0x%08X\n", hr);
+				frame->Release();
+				decoder->Release();
+				vm->push(DlangObject(-1));
+				return false;
+			}
+
+			gfx.textures.push_back(d2dBitmap);
+			int textureIndex = static_cast<int>(gfx.textures.size() - 1);
+
+			converter->Release();
+			frame->Release();
+			decoder->Release();
+
+			vm->push(DlangObject(textureIndex));
+			return true;
+			}, "gfx", 1);
+
+		vm->registerNativeFunction("draw_image", [](vm::DLangVirtualMachine* vm) -> bool {
+			auto stackSize = vm->getStackSize();
+
+			auto sizeX = DlangObject(-1.f);
+			auto sizeY = DlangObject(-1.f);
+
+			if (stackSize > 4)
+			{
+				sizeY = vm->pop();
+				sizeX = vm->pop();
+			}
+			
+			auto yObj = vm->pop();
+			auto xObj = vm->pop();
+			auto textureIndexObj = vm->pop();
+			int textureIndex = textureIndexObj.intValue;
+
+			if (textureIndex < 0 || textureIndex >= gfx.textures.size())
+				throw std::runtime_error("Invalid texture index for gfx.draw_texture, index out of bounds (" + std::to_string(textureIndex) + ")");
+			ID2D1Bitmap* texture = gfx.textures[textureIndex];
+
+			float x = (xObj.type == DlangType::Float) ? xObj.floatValue : (float)xObj.intValue;
+			float y = (yObj.type == DlangType::Float) ? yObj.floatValue : (float)yObj.intValue;
+
+			gfx.renderTarget->DrawBitmap(texture, D2D1::RectF(x, y, x + (sizeX.floatValue > 0 ? sizeX.floatValue : texture->GetSize().width), y + (sizeY.floatValue > 0 ? sizeY.floatValue : texture->GetSize().height)));
+			return true;
+			}, "gfx", 3);
 	}
 }

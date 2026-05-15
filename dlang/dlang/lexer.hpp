@@ -118,8 +118,16 @@ namespace dlang
 					else if ((c == '=' || c == '+' || c == '*' || c == '/') ||
 						(c == '-' && (i + 1 >= m_input.size() || !isdigit(m_input[i + 1]))))
 					{
-						processBuffer();
-						m_tokens.push_back({ TokenType::OPERATOR, std::string(1, c), lineNumber });
+						if (m_input.substr(i, 2) == "==" || m_input.substr(i, 2) == "!=")
+						{
+							processBuffer();
+							m_tokens.push_back({ TokenType::OPERATOR, m_input.substr(i, 2), lineNumber });
+							i++;
+						}
+						else {
+							processBuffer();
+							m_tokens.push_back({ TokenType::OPERATOR, std::string(1, c), lineNumber });
+						}
 					}
 					else if (c == '&')
 					{
