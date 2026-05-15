@@ -65,7 +65,14 @@ namespace dlang
 						
 						auto token = fnv1a_hash(m_buffer.c_str());
 
-						if (m_buffer[0] == '=' || m_buffer[0] == '+' || m_buffer[0] == '-' || m_buffer[0] == '*' || m_buffer[0] == '/')
+						if (isdigit(m_buffer[0]) || (m_buffer[0] == '-' && m_buffer.size() > 1 && isdigit(m_buffer[1])))
+						{
+							if (m_buffer.find('.') != std::string::npos)
+								t.type = TokenType::FLOAT;
+							else
+								t.type = TokenType::NUMBER;
+						}
+						else if (m_buffer[0] == '=' || m_buffer[0] == '+' || m_buffer[0] == '-' || m_buffer[0] == '*' || m_buffer[0] == '/')
 							t.type = TokenType::OPERATOR;
 						else if (m_buffer[0] == '\'' || m_buffer[0] == '"')
 							t.type = TokenType::STRING;
@@ -75,8 +82,6 @@ namespace dlang
 								token == consts::KEYWORD_FUNC ||
 								token == consts::KEYWORD_RETURN)
 							t.type = TokenType::KEYWORD;
-						else if (isdigit(m_buffer[0]))
-							t.type = TokenType::NUMBER;
 						else if(m_buffer == "true" || m_buffer == "false")
 							t.type = TokenType::BOOLEAN;
 						else if (m_buffer == "include")
@@ -109,6 +114,23 @@ namespace dlang
 						t.value = std::string(1, c);
 						t.line = lineNumber;
 						m_tokens.push_back(t);
+					}
+					else if ((c == '=' || c == '+' || c == '*' || c == '/') ||
+						(c == '-' && (i + 1 >= m_input.size() || !isdigit(m_input[i + 1]))))
+					{
+						processBuffer();
+						m_tokens.push_back({ TokenType::OPERATOR, std::string(1, c), lineNumber });
+					}
+					else if (c == '&')
+					{
+						processBuffer();
+						if (i + 1 < m_input.size() && m_input[i + 1] == '&')
+						{
+							m_tokens.push_back({ TokenType::OPERATOR, "&&", lineNumber });
+							i++;
+						}
+						else
+							throw std::runtime_error("Unexpected character '&' at line: " + std::to_string(lineNumber) + ". Did you mean '&&'?");
 					}
 					else if (c == '\'' || c == '"')
 					{

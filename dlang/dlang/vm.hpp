@@ -170,6 +170,22 @@ namespace dlang
 							throw std::runtime_error("Failed to read integer from bytecode at position: " + std::to_string(i));
 					} break;
 
+					case Opcode::PUSH_FLOAT: {
+						union {
+							float f;
+							int32_t i;
+						} converter;
+
+						if (helpers::memory::readInt32LE(bytes, i + 1, &converter.i))
+						{
+							push(DlangObject(converter.f));
+							i += 4;
+						}
+						else
+							throw std::runtime_error("Failed to read float from bytecode at position: " + std::to_string(i));
+
+					} break;
+
 					case Opcode::PUSH_STRING: {
 						uint8_t size = bytes[i + 1];
 						std::string val = std::string(bytes.begin() + i + 2, bytes.begin() + i + 2 + size);
@@ -191,10 +207,21 @@ namespace dlang
 						auto left = pop();
 
 						if (left.type == DlangType::String || right.type == DlangType::String) {
-							std::string sLeft = (left.type == DlangType::String) ? getStringFromPool(left.intValue) : std::to_string(left.intValue);
-							std::string sRight = (right.type == DlangType::String) ? getStringFromPool(right.intValue) : std::to_string(right.intValue);
+							auto convertToString = [&](DlangObject& obj) {
+								if (obj.type == DlangType::String) return getStringFromPool(obj.intValue);
+								if (obj.type == DlangType::Float)  return std::to_string(obj.floatValue); // Gebruik .floatValue!
+								return std::to_string(obj.intValue);
+								};
+
+							std::string sLeft = convertToString(left);
+							std::string sRight = convertToString(right);
 
 							push(DlangObject(addToStringPool(sLeft + sRight), DlangType::String));
+						}
+						else if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft + fRight));
 						}
 						else push(DlangObject(left.intValue + right.intValue));
 					} break;
@@ -206,7 +233,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue - right.intValue));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft - fRight));
+						}
+						else push(DlangObject(left.intValue - right.intValue));
 					} break;
 
 					case Opcode::MP: {
@@ -216,7 +248,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue * right.intValue));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft * fRight));
+						}
+						else push(DlangObject(left.intValue * right.intValue));
 					} break;
 
 					case Opcode::DIV: {
@@ -226,7 +263,18 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue / right.intValue));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							if(fRight == 0.0f)
+								throw std::runtime_error("Division by zero error.");
+							push(DlangObject(fLeft / fRight));
+						}
+						else {
+							if(right.intValue == 0)
+								throw std::runtime_error("Division by zero error.");
+							push(DlangObject(left.intValue / right.intValue));
+						}
 					} break;
 
 					case Opcode::STORE_VAR: {
@@ -264,7 +312,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue < right.intValue ? 1 : 0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft < fRight ? 1 : 0));
+						}
+						else push(DlangObject(left.intValue < right.intValue ? 1 : 0));
 					} break;
 
 					case Opcode::GREATER_THAN: {
@@ -274,7 +327,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue > right.intValue ? 1 : 0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft > fRight ? 1 : 0));
+						}
+						else push(DlangObject(left.intValue > right.intValue ? 1 : 0));
 					} break;
 
 					case Opcode::LESS_OR_EQUAL_THAN: {
@@ -284,7 +342,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue <= right.intValue ? 1 : 0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft <= fRight ? 1 : 0));
+						}
+						else push(DlangObject(left.intValue <= right.intValue ? 1 : 0));
 					} break;
 
 					case Opcode::GREATER_OR_EQUAL_THAN: {
@@ -294,7 +357,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue >= right.intValue ? 1 : 0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft >= fRight ? 1 : 0));
+						}
+						else push(DlangObject(left.intValue >= right.intValue ? 1 : 0));
 					} break;
 
 					case Opcode::NOT_EQUALS_TO: {
@@ -304,7 +372,12 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(DlangObject(left.intValue != right.intValue ? 1 : 0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft != fRight ? 1 : 0));
+						}
+						else push(DlangObject(left.intValue != right.intValue ? 1 : 0));
 					} break;
 
 					case Opcode::COMPARE: {
@@ -314,7 +387,22 @@ namespace dlang
 						auto right = pop();
 						auto left = pop();
 
-						push(left.intValue == right.intValue ? DlangObject(1) : DlangObject(0));
+						if (left.type == DlangType::Float || right.type == DlangType::Float) {
+							float fLeft = (left.type == DlangType::Float) ? left.floatValue : static_cast<float>(left.intValue);
+							float fRight = (right.type == DlangType::Float) ? right.floatValue : static_cast<float>(right.intValue);
+							push(DlangObject(fLeft == fRight ? 1 : 0));
+						}
+						else push(left.intValue == right.intValue ? DlangObject(1) : DlangObject(0));
+					} break;
+
+					case Opcode::LOGIC_AND: {
+						auto right = pop();
+						auto left = pop();
+
+						bool leftTrue = (left.type == DlangType::Float) ? (left.floatValue != 0.0f) : (left.intValue != 0);
+						bool rightTrue = (right.type == DlangType::Float) ? (right.floatValue != 0.0f) : (right.intValue != 0);
+
+						push(DlangObject(leftTrue && rightTrue ? 1 : 0));
 					} break;
 
 					case Opcode::JUMP_IF_FALSE: {

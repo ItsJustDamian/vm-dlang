@@ -18,6 +18,8 @@ namespace dlang::functions::utils
 			case dlang::DlangType::String:
 				printf("%s", vm->getStringFromPool(obj.intValue).c_str());
 				break;
+			case dlang::DlangType::Float:
+				printf("%f", obj.floatValue);
 			}
 		}
 

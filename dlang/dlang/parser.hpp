@@ -123,17 +123,18 @@ namespace dlang
 			void parsePrimary()
 			{
 				auto token = consume();
-				if (token.type == lexer::TokenType::NUMBER || token.value[0] == '-')
-				{
-					int32_t val = 0;
-					if (token.value[0] == '-')
-					{
-						token.value = token.value.substr(1); // Remove the '-' for now, we'll handle it in bytecode
-						int32_t val = -std::stoi(token.value);
-					}
-					else
-						val = std::stoi(token.value);
 
+				 if (token.type == lexer::TokenType::FLOAT)
+				 {
+					m_bytecode.push_back(Opcode::PUSH_FLOAT);
+					float floatValue = std::stof(token.value);
+					uint32_t intValue;
+					std::memcpy(&intValue, &floatValue, sizeof(float));
+					helpers::memory::writeInt32LE(intValue, m_bytecode);
+				}
+				else if (token.type == lexer::TokenType::NUMBER)
+				{
+					int32_t val = std::stoi(token.value);
 					m_bytecode.push_back(Opcode::PUSH_INT);
 					helpers::memory::writeInt32LE(val, m_bytecode);
 				}
@@ -146,14 +147,6 @@ namespace dlang
 				{
 					m_bytecode.push_back(Opcode::PUSH_BOOL);
 					m_bytecode.push_back(token.value == "true" ? 1 : 0);
-				}
-				else if (token.type == lexer::TokenType::FLOAT)
-				{
-					m_bytecode.push_back(Opcode::PUSH_FLOAT);
-					float floatValue = std::stof(token.value);
-					uint32_t intValue;
-					std::memcpy(&intValue, &floatValue, sizeof(float));
-					helpers::memory::writeInt32LE(intValue, m_bytecode);
 				}
 				else if (token.type == lexer::TokenType::IDENTIFIER && peek().value[0] == '(')
 				{
@@ -220,9 +213,22 @@ namespace dlang
 
 			}
 
+			
 			void parseExpression()
 			{
+				parseLogicalAnd();
+			}
+
+			void parseLogicalAnd()
+			{
 				parseComparison();
+
+				while (!isAtEnd() && peek().value == "&&")
+				{
+					consume();
+					parseComparison();
+					m_bytecode.push_back(Opcode::LOGIC_AND);
+				}
 			}
 
 			void parseAssignment()

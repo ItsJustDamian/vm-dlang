@@ -51,7 +51,8 @@ namespace dlang
 		NOT_EQUALS_TO = 0x27,
 		DEF_FUNC = 0x40,
 		END_FUNC = 0x41,
-		RETURN = 0x42
+		RETURN = 0x42,
+		LOGIC_AND = 0x50,
 	};
 
 	struct DlangObject
@@ -61,12 +62,14 @@ namespace dlang
 		{
 			void* objPtr;
 			int intValue;
+			float floatValue;
 			DWORD64 ptrValue;
 		};
 		
 		DlangObject() : type(DlangType::None), ptrValue(0) {}
 		DlangObject(int value, DlangType _type = DlangType::Integer) : type(_type), intValue(value) {}
 		DlangObject(DWORD64 value) : type(DlangType::Pointer) { ptrValue = value; }
+		DlangObject(float value) : type(DlangType::Float), floatValue(value) {}
 	};
 
 	struct DlangFunction

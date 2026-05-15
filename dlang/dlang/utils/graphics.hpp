@@ -3,10 +3,12 @@
 #include <Windows.h>
 #include <Windowsx.h>
 #include <d2d1.h>
+#include <dwrite.h>
 #include <chrono>
 #include "../vm.hpp"
 
 #pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
 #undef max
 
 namespace dlang::functions::graphics
@@ -16,6 +18,8 @@ namespace dlang::functions::graphics
 		ID2D1Factory* factory = nullptr;
 		ID2D1HwndRenderTarget* renderTarget = nullptr;
 		ID2D1SolidColorBrush* brush = nullptr;
+		IDWriteFactory* pDWriteFactory = nullptr;
+		IDWriteTextFormat* pTextFormat = nullptr;
 	};
 
 	struct GfxInput
@@ -130,6 +134,19 @@ namespace dlang::functions::graphics
 				&gfx.renderTarget
 			);
 
+			DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&gfx.pDWriteFactory));
+
+			gfx.pDWriteFactory->CreateTextFormat(
+				L"Consolas",                // Lettertype
+				NULL,                       // Font collection
+				DWRITE_FONT_WEIGHT_NORMAL,
+				DWRITE_FONT_STYLE_NORMAL,
+				DWRITE_FONT_STRETCH_NORMAL,
+				24.0f,                      // Font size
+				L"en-us",                   // Locale
+				&gfx.pTextFormat
+			);
+
 			return true;
 			}, "gfx", 3);
 
@@ -178,17 +195,17 @@ namespace dlang::functions::graphics
 			}, "gfx", 0);
 
 		vm->registerNativeFunction("draw_rect", [](vm::DLangVirtualMachine* vm) -> bool {
-			if (!vm->checkStack({ DlangType::Integer, DlangType::Integer, DlangType::Integer, DlangType::Integer, DlangType::Integer }))
-				throw std::runtime_error("Invalid arguments for gfx.draw_rect, expected (int x, int y, int width, int height, int colorIndex)");
+			int argc = vm->getStackSize();
 
-			DlangObject filled = DlangObject(1);
-			if (vm->getStackSize() >= 6)
-				filled = vm->pop();
+			DlangObject filled(1);
+
+			if (argc >= 6) filled = vm->pop();
 			auto colorObj = vm->pop();
 			auto height = vm->pop();
 			auto width = vm->pop();
 			auto y = vm->pop();
 			auto x = vm->pop();
+
 			if (colors.size() < colorObj.intValue)
 				throw std::runtime_error("Invalid color index for gfx.draw_rect, index out of bounds");
 			auto color = D2D1::ColorF(colors[colorObj.intValue].r / 255.0f, colors[colorObj.intValue].g / 255.0f, colors[colorObj.intValue].b / 255.0f, colors[colorObj.intValue].a / 255.0f);
@@ -198,11 +215,93 @@ namespace dlang::functions::graphics
 				gfx.brush->SetColor(color);
 
 			if (filled.type == DlangType::Integer && filled.intValue == 1)
-				gfx.renderTarget->FillRectangle(D2D1::RectF(x.intValue, y.intValue, x.intValue + width.intValue, y.intValue + height.intValue), gfx.brush);
+				gfx.renderTarget->FillRectangle(D2D1::RectF(x.floatValue, y.floatValue, x.floatValue + width.intValue, y.floatValue + height.intValue), gfx.brush);
 			else
-				gfx.renderTarget->DrawRectangle(D2D1::RectF(x.intValue, y.intValue, x.intValue + width.intValue, y.intValue + height.intValue), gfx.brush);
+				gfx.renderTarget->DrawRectangle(D2D1::RectF(x.floatValue, y.floatValue, x.floatValue + width.intValue, y.floatValue + height.intValue), gfx.brush);
 			return true;
 			}, "gfx", 5);
+
+		vm->registerNativeFunction("draw_circle", [](vm::DLangVirtualMachine* vm) -> bool {
+			int argc = vm->getStackSize();
+			DlangObject filled(1);
+			if (argc >= 5) filled = vm->pop();
+			auto colorObj = vm->pop();
+			auto radius = vm->pop();
+			auto y = vm->pop();
+			auto x = vm->pop();
+			
+			if (colors.size() < colorObj.intValue)
+				throw std::runtime_error("Invalid color index for gfx.draw_circle, index out of bounds");
+			
+			auto color = D2D1::ColorF(colors[colorObj.intValue].r / 255.0f, colors[colorObj.intValue].g / 255.0f, colors[colorObj.intValue].b / 255.0f, colors[colorObj.intValue].a / 255.0f);
+			
+			if (!gfx.brush)
+				gfx.renderTarget->CreateSolidColorBrush(color, &gfx.brush);
+			else
+				gfx.brush->SetColor(color);
+
+			if (filled.type == DlangType::Integer && filled.intValue == 1)
+				gfx.renderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(x.floatValue, y.floatValue), radius.floatValue, radius.floatValue), gfx.brush);
+			else
+				gfx.renderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(x.floatValue, y.floatValue), radius.floatValue, radius.floatValue), gfx.brush);
+			
+			return true;
+			}, "gfx", 4);
+
+		vm->registerNativeFunction("draw_text", [](vm::DLangVirtualMachine* vm) -> bool {
+			auto stackSize = vm->getStackSize();
+			
+			DlangObject hAlignObj(0);
+			DlangObject vAlignObj(0);
+
+			if(stackSize > 5) vAlignObj = vm->pop(); // 0 = Top, 1 = Center, 2 = Bottom
+			if(stackSize > 4) hAlignObj = vm->pop(); // 0 = Left, 1 = Center, 2 = Right
+			auto colorObj = vm->pop();
+			auto yObj = vm->pop();
+			auto xObj = vm->pop();
+			auto textObj = vm->pop();
+
+			auto color = D2D1::ColorF(colors[colorObj.intValue].r / 255.0f, colors[colorObj.intValue].g / 255.0f, colors[colorObj.intValue].b / 255.0f, colors[colorObj.intValue].a / 255.0f);
+			
+			if (!gfx.brush)
+				gfx.renderTarget->CreateSolidColorBrush(color, &gfx.brush);
+			else
+				gfx.brush->SetColor(color);
+
+			float x = (xObj.type == DlangType::Float) ? xObj.floatValue : (float)xObj.intValue;
+			float y = (yObj.type == DlangType::Float) ? yObj.floatValue : (float)yObj.intValue;
+
+			DWRITE_TEXT_ALIGNMENT hAlign = DWRITE_TEXT_ALIGNMENT_LEADING; // Default Left
+			if (hAlignObj.intValue == 1) hAlign = DWRITE_TEXT_ALIGNMENT_CENTER;
+			else if (hAlignObj.intValue == 2) hAlign = DWRITE_TEXT_ALIGNMENT_TRAILING;
+			gfx.pTextFormat->SetTextAlignment(hAlign);
+
+			DWRITE_PARAGRAPH_ALIGNMENT vAlign = DWRITE_PARAGRAPH_ALIGNMENT_NEAR; // Default Top
+			if (vAlignObj.intValue == 1) vAlign = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
+			else if (vAlignObj.intValue == 2) vAlign = DWRITE_PARAGRAPH_ALIGNMENT_FAR;
+			gfx.pTextFormat->SetParagraphAlignment(vAlign);
+			
+			D2D1_RECT_F layoutRect;
+			if (hAlign == DWRITE_TEXT_ALIGNMENT_TRAILING)
+				layoutRect = D2D1::RectF(0.0f, y, x, y + 100.0f);
+			else if (hAlign == DWRITE_TEXT_ALIGNMENT_CENTER)
+				layoutRect = D2D1::RectF(0.0f, y, 800.0f, y + 100.0f);
+			else
+				layoutRect = D2D1::RectF(x, y, 800.0f, y + 100.0f);
+
+			std::string text = vm->getStringFromPool(textObj.intValue);
+			std::wstring widestr = std::wstring(text.begin(), text.end());
+
+			gfx.renderTarget->DrawText(
+				widestr.c_str(),
+				(UINT32)widestr.length(),
+				gfx.pTextFormat,
+				layoutRect,
+				gfx.brush
+			);
+
+			return true;
+			}, "gfx", 3);
 
 		vm->registerNativeFunction("key_pressed", [](vm::DLangVirtualMachine* vm) -> bool {
 			if (!vm->checkStack({ DlangType::Integer }))
@@ -230,7 +329,7 @@ namespace dlang::functions::graphics
 			}, "gfx", 1);
 
 		vm->registerNativeFunction("get_deltatime", [](vm::DLangVirtualMachine* vm) -> bool {
-			vm->push(DlangObject(static_cast<int>(deltaTime)));
+			vm->push(DlangObject(deltaTime));
 			return true;
 			}, "gfx", 0);
 	}

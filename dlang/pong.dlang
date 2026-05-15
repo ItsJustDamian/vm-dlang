@@ -1,41 +1,132 @@
 var backgroundColor = gfx.color(60, 187, 207)
 var playerColor = gfx.color(255, 255, 255)
 
-var player1X = 0
-var player1Y = 250
+var neutralColor = gfx.color(40, 40, 40)
+var winningColor = gfx.color(255, 215, 0)
+var losingColor = gfx.color(255, 0, 0)
+
+var player1X = 0.0
+var player1Y = 250.0
+var player2X = 780.0
+var player2Y = 250.0
+
+var playerScore1 = 0
+var playerScore2 = 0
+
+var paddleSpeed = 400
+
+var ballX = 400.0
+var ballY = 300.0
+var ballSpeedX = 200.0
+var ballSpeedY = 200.0
+var ballSize = 15.0
 
 gfx.init('Pong', 800, 600)
 
-func DrawPlayer() {
-    gfx.draw_rect(player1X, player1Y, 20, 100, playerColor)
+func UpdateBall(deltaTime) {
+    ballX = ballX + ballSpeedX * deltaTime
+    ballY = ballY + ballSpeedY * deltaTime
+
+    if (ballY < 0.0) {
+        ballY = 0.0
+        ballSpeedY = ballSpeedY * -1.0
+    }
+
+    if (ballY > 600.0 - ballSize) {
+        ballY = 600.0 - ballSize
+        ballSpeedY = ballSpeedY * -1.0
+    }
+
+    if (ballX < player1X + 20.0 && ballY > player1Y && ballY < player1Y + 100.0) {
+        ballX = player1X + 20.0
+        ballSpeedX = ballSpeedX * -1.0
+    }
+
+    if (ballX > player2X - ballSize && ballY > player2Y && ballY < player2Y + 100.0) {
+        ballX = player2X - ballSize
+        ballSpeedX = ballSpeedX * -1.0
+    }
+
+    if (ballX < 0.0) {
+        playerScore2 = playerScore2 + 1
+        ballX = 400.0
+        ballY = 300.0
+    }
+
+    if (ballX > 800.0 - ballSize) {
+        playerScore1 = playerScore1 + 1
+        ballX = 400.0
+        ballY = 300.0
+    }
+
+    gfx.draw_circle(ballX, ballY, ballSize, playerColor)
 }
 
-func UpdateKeyboard() {
+func UpdatePlayers(deltaTime) {
     if (gfx.key_down(87)) {
-        player1Y = player1Y - 5
+        player1Y = player1Y - paddleSpeed * deltaTime
     }
 
     if (gfx.key_down(83)) {
-        player1Y = player1Y + 5
+        player1Y = player1Y + paddleSpeed * deltaTime
     }
 
-    if(player1Y < 0) {
-        player1Y = 0
+    if (gfx.key_down(38)) {
+        player2Y = player2Y - paddleSpeed * deltaTime
     }
 
-    if(player1Y > 500) {
-        player1Y = 500
+    if (gfx.key_down(40)) {
+        player2Y = player2Y + paddleSpeed * deltaTime
     }
+
+    if(player1Y < 0.0) {
+        player1Y = 0.0
+    }
+
+    if(player1Y > 500.0) {
+        player1Y = 500.0
+    }
+
+    if(player2Y < 0.0) {
+        player2Y = 0.0
+    }
+
+    if(player2Y > 500.0) {
+        player2Y = 500.0
+    }
+
+    gfx.draw_rect(player1X, player1Y, 20, 100, playerColor)
+    gfx.draw_rect(player2X, player2Y, 20, 100, playerColor)
+}
+
+func renderScores() {
+    var player1Color = neutralColor
+    var player2Color = neutralColor
+
+    if (playerScore1 > playerScore2) {
+        player1Color = winningColor
+        player2Color = losingColor
+    }
+
+    if (playerScore2 > playerScore1) {
+        player1Color = losingColor
+        player2Color = winningColor
+    }
+
+    gfx.draw_text("Player 1: " + playerScore1, 10.0, 10.0, player1Color)
+    gfx.draw_text("Player 2: " + playerScore2, 790.0, 10.0, player2Color, 2)
 }
 
 while (1) {
+    var deltaTime = gfx.get_deltatime()
     gfx.begin()
     gfx.clear(backgroundColor)
 
-    DrawPlayer()
-    UpdateKeyboard()
+    UpdatePlayers(deltaTime)
+    UpdateBall(deltaTime)
+
+    renderScores()
 
     gfx.end()
     gfx.update()
-    var deltaTime = gfx.get_deltatime()
 }
