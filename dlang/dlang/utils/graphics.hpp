@@ -8,6 +8,9 @@
 #include <chrono>
 #include "../vm.hpp"
 
+#include "../../dependencies/soloud/soloud.h"
+#include "../../dependencies/soloud/soloud_wav.h"
+
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "windowscodecs.lib")
@@ -27,6 +30,8 @@ namespace dlang::functions::graphics
 		std::vector<ID2D1Bitmap*> textures;
 		int width = 800;
 		int height = 600;
+		SoLoud::Soloud soloud;
+		std::vector<SoLoud::Wav*> sounds;
 	};
 
 	struct GfxInput
@@ -173,6 +178,8 @@ namespace dlang::functions::graphics
 				MessageBoxA(NULL, errorMsg, "GFX Error", MB_ICONERROR);
 				return false; // Stop de init zodat we niet later crashen
 			}
+
+			gfx.soloud.init();
 
 			return true;
 			}, "gfx", 3);
@@ -462,6 +469,47 @@ namespace dlang::functions::graphics
 
 			gfx.renderTarget->DrawBitmap(texture, D2D1::RectF(x, y, x + (sizeX.floatValue > 0 ? sizeX.floatValue : texture->GetSize().width), y + (sizeY.floatValue > 0 ? sizeY.floatValue : texture->GetSize().height)));
 			return true;
-			}, "gfx", 3);
+		}, "gfx", 3);
+
+		vm->registerNativeFunction("load_sound", [](vm::DLangVirtualMachine* vm) -> bool {
+			auto pathObj = vm->pop();
+			std::string path = vm->getStringFromPool(pathObj.intValue);
+
+			SoLoud::Wav* wav = new SoLoud::Wav();
+			if (wav->load(path.c_str()) != SoLoud::SO_NO_ERROR) {
+				delete wav;
+				throw std::runtime_error("Failed to load audio file: " + path);
+			}
+
+			gfx.sounds.push_back(wav);
+			int soundIndex = (int)gfx.sounds.size() - 1;
+
+			vm->push(DlangObject(soundIndex));
+			return true;
+		}, "gfx", 1);
+
+		vm->registerNativeFunction("play_sound", [](vm::DLangVirtualMachine* vm) -> bool {
+			auto stackSize = vm->getStackSize();
+
+			DlangObject loopObj(0);
+			DlangObject volumeObj(1.0f);
+
+			if (stackSize > 2) loopObj = vm->pop();
+			if (stackSize > 1) volumeObj = vm->pop();
+			auto soundIndexObj = vm->pop();
+
+			int index = soundIndexObj.intValue;
+			if (index < 0 || index >= gfx.sounds.size()) {
+				throw std::runtime_error("Invalid sound index for gfx.play_sound");
+			}
+
+			float volume = (volumeObj.type == DlangType::Float) ? volumeObj.floatValue : (float)volumeObj.intValue;
+			bool loop = (loopObj.intValue == 1);
+
+			int handle = gfx.soloud.play(*gfx.sounds[index], volume);
+			gfx.soloud.setLooping(handle, loop);
+
+			return true;
+		}, "gfx", 1);
 	}
 }
