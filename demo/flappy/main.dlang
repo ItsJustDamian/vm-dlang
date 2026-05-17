@@ -1,0 +1,61 @@
+var backgroundColor = gfx.color(60, 187, 207)
+var textColor = gfx.color(255, 255, 255)
+var titleColor = gfx.color(255, 215, 0)
+
+gfx.init('Flappy Bird', 400, 600)
+
+var images = {
+    'flappy': gfx.load_image('assets/flappy.png'),
+    'top_pipe': gfx.load_image('assets/top_pipe.png'),
+    'bottom_pipe': gfx.load_image('assets/bottom_pipe.png'),
+    'cloud': gfx.load_image('assets/cloud.png')
+}
+
+var sounds = {
+    'die': gfx.load_sound('assets/die.wav'),
+    'fly': gfx.load_sound('assets/fly.wav'),
+    'point': gfx.load_sound('assets/point.wav')
+}
+
+var gameData = {
+    'score': 0,
+    'highscore': 0,
+    'gameState': 0
+}
+
+include('player.dlang')
+include('game.dlang')
+include('background.dlang')
+include('pipes.dlang')
+
+while(gfx.window_closed() != 1) {
+    var deltaTime = gfx.get_deltatime()
+    gfx.begin();
+    gfx.clear(backgroundColor)
+
+    UpdateBackground(deltaTime)
+
+    if(GameState['state'] == 0) {
+        player['velocityY'] = 0.0
+        gfx.draw_image(images['flappy'], player['x'], player['y'], 128.0, 128.0)
+        
+        gfx.draw_text('FLAPPY BIRD', 0.0, 150.0, titleColor, 1)
+        gfx.draw_text("HIGH SCORE: " + GameState['highscore'], 0.0, 220.0, textColor, 1)
+        gfx.draw_text("PRESS SPACE TO START", 0.0, 360.0, textColor, 1)
+
+        if (gfx.key_pressed(32)) {
+            player['velocityY'] = player['jumpForce']
+            GameState['state'] = 1
+        }
+    }
+
+    if(GameState['state'] == 1) {
+        UpdatePipes(deltaTime)
+        UpdatePlayer(deltaTime)
+
+        gfx.draw_text("SCORE: " + GameState['score'], 0.0, 40.0, textColor, 1)
+    }
+
+    gfx.end()
+    gfx.update()
+}

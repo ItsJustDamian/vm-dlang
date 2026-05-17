@@ -15,20 +15,20 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	auto fileName = argv[1];
-	auto start = std::chrono::high_resolution_clock::now();
-
-	dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
-	dlang::functions::utils::initFunctions(&vm);
-	dlang::functions::graphics::initFunctions(&vm);
-
-
-	dlang::lexer::Lexer lexer = dlang::lexer::Lexer(fileName);
-	lexer.CompileInput();
-
-	dlang::parser::Parser parser = dlang::parser::Parser(lexer.GetTokens());
-
 	try {
+		auto fileName = argv[1];
+		auto start = std::chrono::high_resolution_clock::now();
+
+		dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
+		dlang::functions::utils::initFunctions(&vm);
+		dlang::functions::graphics::initFunctions(&vm);
+
+
+		dlang::lexer::Lexer lexer = dlang::lexer::Lexer(fileName);
+		lexer.CompileInput();
+
+		dlang::parser::Parser parser = dlang::parser::Parser(lexer.GetTokens());
+
 		parser.Parse();
 
 		for (const auto& byte : parser.GetBytecode())

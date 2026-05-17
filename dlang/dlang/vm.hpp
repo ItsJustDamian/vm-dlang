@@ -99,7 +99,7 @@ namespace dlang
 				if (index >= 0 && index < m_stringPool.size())
 					return m_stringPool[index];
 				else
-					throw std::runtime_error("String pool index out of bounds: " + std::to_string(index));
+					throw std::runtime_error("[VM]: String pool index out of bounds: " + std::to_string(index));
 			}
 
 			void storeVariable(const std::string& name, const DlangObject& value, const bool& localScope = false)
@@ -125,7 +125,7 @@ namespace dlang
 				if (m_globalVariables.find(name) != m_globalVariables.end())
 					return m_globalVariables[name];
 				else
-					throw std::runtime_error("Variable not found: " + name);
+					throw std::runtime_error("[VM]: Variable not found: " + name);
 			}
 
 			/* Namespace * = global, any other is whatever you assign */
@@ -149,7 +149,7 @@ namespace dlang
 				for (int i = 0; i < bytes.size(); i++)
 				{
 					if(i > bytes.size())
-						throw std::runtime_error("Instruction pointer out of bounds: " + std::to_string(i));
+						throw std::runtime_error("[VM]: Instruction pointer out of bounds: " + std::to_string(i));
 
 					const auto& byte = bytes[i];
 
@@ -167,7 +167,7 @@ namespace dlang
 							i += 4;
 						}
 						else
-							throw std::runtime_error("Failed to read integer from bytecode at position: " + std::to_string(i));
+							throw std::runtime_error("[VM]: Failed to read integer from bytecode at position: " + std::to_string(i));
 					} break;
 
 					case Opcode::PUSH_FLOAT: {
@@ -182,7 +182,7 @@ namespace dlang
 							i += 4;
 						}
 						else
-							throw std::runtime_error("Failed to read float from bytecode at position: " + std::to_string(i));
+							throw std::runtime_error("[VM]: Failed to read float from bytecode at position: " + std::to_string(i));
 
 					} break;
 
@@ -201,7 +201,7 @@ namespace dlang
 
 					case Opcode::ADD: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -228,7 +228,7 @@ namespace dlang
 
 					case Opcode::SUB: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -243,7 +243,7 @@ namespace dlang
 
 					case Opcode::MP: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -258,7 +258,7 @@ namespace dlang
 
 					case Opcode::DIV: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -283,7 +283,7 @@ namespace dlang
 						i += size + 1;
 
 						if (m_stack.size() < 1)
-							throw std::runtime_error("Not enough values on the stack to store variable: " + varName);
+							throw std::runtime_error("[VM]: Not enough values on the stack to store variable: " + varName);
 
 						auto value = pop();
 						storeVariable(varName, value);
@@ -300,14 +300,14 @@ namespace dlang
 					case Opcode::JUMP: {
 						int address = 0;
 						if (!helpers::memory::readInt32LE(bytes, i + 1, &address))
-							throw std::runtime_error("Failed to read jump address from bytecode at position: " + std::to_string(i));
+							throw std::runtime_error("[VM]: Failed to read jump address from bytecode at position: " + std::to_string(i));
 
 						i = address - 1; // -1 because the loop will increment it
 					} break;
 
 					case Opcode::LESS_THAN: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -322,7 +322,7 @@ namespace dlang
 
 					case Opcode::GREATER_THAN: {
 						if(m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -337,7 +337,7 @@ namespace dlang
 
 					case Opcode::LESS_OR_EQUAL_THAN: {
 						if(m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -352,7 +352,7 @@ namespace dlang
 
 					case Opcode::GREATER_OR_EQUAL_THAN: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -367,7 +367,7 @@ namespace dlang
 
 					case Opcode::NOT_EQUALS_TO: {
 						if(m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -382,7 +382,7 @@ namespace dlang
 
 					case Opcode::COMPARE: {
 						if (m_stack.size() < 2)
-							throw std::runtime_error("Not enough values on the stack to perform addition.");
+							throw std::runtime_error("[VM]: Not enough values on the stack to perform addition.");
 
 						auto right = pop();
 						auto left = pop();
@@ -410,7 +410,7 @@ namespace dlang
 
 						int target = -1;
 						if(!helpers::memory::readInt32LE(bytes, i + 1, &target))
-							throw std::runtime_error("Failed to read jump address from bytecode at position: " + std::to_string(i));
+							throw std::runtime_error("[VM]: Failed to read jump address from bytecode at position: " + std::to_string(i));
 
 						if (condition.intValue == 0)
 							i = target - 1;
@@ -425,11 +425,11 @@ namespace dlang
 
 						auto it = m_functions.find(funcName);
 						if(it == m_functions.end())
-							throw std::runtime_error("Function not found: '" + funcName + "'");
+							throw std::runtime_error("[VM]: Function not found: '" + funcName + "'");
 						auto func = it->second;
 
 						if(func.numArgs > m_stack.size())
-							throw std::runtime_error("Not enough arguments on the stack to call function: '" + funcName + "'");
+							throw std::runtime_error("[VM]: Not enough arguments on the stack to call function: '" + funcName + "'");
 
 						if (func.nativePtr != nullptr)
 						{
@@ -437,7 +437,7 @@ namespace dlang
 							auto result = reinterpret_cast<fn>(func.nativePtr)(this);
 
 							if(!result)
-								throw std::runtime_error("Native function '" + funcName + "' returned false, indicating an error during execution.");
+								throw std::runtime_error("[VM]: Native function '" + funcName + "' returned false, indicating an error during execution.");
 						}
 						else {
 							for (int i = 0; i < func.numArgs; i++)
@@ -472,7 +472,7 @@ namespace dlang
 
 						int32_t skipSize = 0;
 						if (!helpers::memory::readInt32LE(bytes, cursor, &skipSize))
-							throw std::runtime_error("Failed to read skipSize at " + std::to_string(cursor));
+							throw std::runtime_error("[VM]: Failed to read skipSize at " + std::to_string(cursor));
 						cursor += 4;
 
 						DlangFunction func;
@@ -491,7 +491,7 @@ namespace dlang
 					case Opcode::RETURN:
 					case Opcode::END_FUNC: {
 						if (m_returnAddressStack.empty())
-							throw std::runtime_error("Return address stack is empty, cannot return from function.");
+							throw std::runtime_error("[VM]: Return address stack is empty, cannot return from function.");
 
 						// take back of return address and pop it
 						i = m_returnAddressStack.back(); // Get the return address from the top of the return stack
@@ -499,8 +499,110 @@ namespace dlang
 						m_scopeVariables.clear();
 					} break;
 
+					case Opcode::NEW_ARRAY: {
+						auto countObj = pop();
+						int elementCount = countObj.intValue;
+
+						std::vector<DlangObject> elements;
+						for (int i = 0; i < elementCount; i++)
+							elements.push_back(pop());
+						
+						std::reverse(elements.begin(), elements.end());
+
+						push(DlangObject(elements));
+					} break;
+
+					case Opcode::STORE_ARRAY: {
+						auto indexObj = pop();
+						auto value = pop();
+						auto arrayObj = pop();
+						int index = indexObj.intValue;
+
+						if (arrayObj.type != DlangType::Array)
+							throw std::runtime_error("[VM]: Attempting to index a non-array object.");
+
+						if (arrayObj.arrayElements == nullptr)
+							throw std::runtime_error("[VM]: Array object has null arrayElements pointer.");
+
+						if (index < 0 || index >= arrayObj.arrayElements->size())
+							throw std::runtime_error("[VM]: Array index out of bounds: " + std::to_string(index));
+						
+						(*arrayObj.arrayElements)[index] = value;
+					} break;
+
+					case Opcode::LOAD_ARRAY: {
+						auto indexObj = pop();
+						auto arrayObj = pop();
+
+						if (arrayObj.type == DlangType::Array)
+						{
+							if (indexObj.intValue < 0 || arrayObj.arrayElements == nullptr || indexObj.intValue >= arrayObj.arrayElements->size())
+								throw std::runtime_error("[VM]: Array index out of bounds: " + std::to_string(indexObj.intValue));
+
+							push(arrayObj.arrayElements->at(indexObj.intValue));
+						}
+						else if (arrayObj.type == DlangType::Map)
+						{
+							std::string key = getStringFromPool(indexObj.intValue);
+
+							if (arrayObj.mapElements == nullptr)
+								throw std::runtime_error("[VM]: Map not initialized or is not map object: " + key);
+
+							auto it = arrayObj.mapElements->find(key);
+							if (it == arrayObj.mapElements->end())
+								throw std::runtime_error("[VM]: Key not found in map: " + key);
+
+							push(arrayObj.mapElements->at(key));
+						}
+						else if (arrayObj.type == DlangType::String)
+						{
+							std::string str = getStringFromPool(arrayObj.intValue);
+							if (indexObj.intValue < 0 || indexObj.intValue >= str.size())
+								throw std::runtime_error("[VM]: String index out of bounds: " + std::to_string(indexObj.intValue));
+							char ch = str[indexObj.intValue];
+							push(DlangObject(addToStringPool(std::string(1, ch)), DlangType::String));
+						}
+						else
+							throw std::runtime_error("[VM]: Attempting to index a non-array/map/string object.");
+						
+					} break;
+
+					case Opcode::NEW_MAP: {
+						int pairCount = pop().intValue;
+						std::unordered_map<std::string, DlangObject> elements;
+
+						for (int i = 0; i < pairCount; i++) {
+							auto value = pop();
+							auto keyObj = pop();
+							if (keyObj.type != DlangType::String)
+								throw std::runtime_error("[VM]: Attempting to use a non-string key in a map.");
+							std::string key = getStringFromPool(keyObj.intValue);
+							elements[key] = value;
+						}
+
+						push(DlangObject(elements));
+					} break;
+
+					case Opcode::STORE_MAP: {
+						auto mapObj = pop();
+						auto value = pop();
+						auto keyObj = pop();
+
+						if (mapObj.type != DlangType::Map)
+							throw std::runtime_error("[VM]: Attempting to index a non-map object.");
+
+						if (mapObj.mapElements == nullptr)
+							throw std::runtime_error("[VM]: Map object has null mapElements pointer.");
+
+						if (keyObj.type != DlangType::String)
+							throw std::runtime_error("[VM]: Attempting to use a non-string key in a map.");
+
+						std::string key = getStringFromPool(keyObj.intValue);
+						(*mapObj.mapElements)[key] = value;
+					} break;
+
 					default:
-						throw std::runtime_error("Unknown opcode: " + std::to_string(byte));
+						throw std::runtime_error("[VM]: Unknown opcode: " + std::to_string(byte));
 						break;
 					}
 				}

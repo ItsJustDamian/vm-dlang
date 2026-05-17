@@ -1,9 +1,11 @@
 #pragma once
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <cctype>
 #include "fnv.hpp"
 #include "helpers.hpp"
 
@@ -11,18 +13,21 @@ namespace dlang
 {
 	namespace lexer
 	{
-		enum TokenType : int
+		enum class TokenType : int
 		{
 			NONE = 0,
-			KEYWORD = 1,
-			IDENTIFIER = 2,
-			OPERATOR = 3,
-			NUMBER = 4,
-			STRING = 5,
-			FLOAT = 6,
-			BOOLEAN = 7,
-			SYMBOL = 8,
-			INCLUDE = 9
+			KEYWORD,
+			IDENTIFIER,
+			OPERATOR,
+			NUMBER,
+			STRING,
+			FLOAT,
+			BOOLEAN,
+			SYMBOL,
+			INCLUDE,
+			LBRACKET,
+			RBRACKET,
+			DOT
 		};
 
 		struct Token
@@ -35,147 +40,253 @@ namespace dlang
 		class Lexer
 		{
 		private:
-			std::string m_input, m_fileName;
+			std::string m_input;
+			std::string m_fileName;
 			std::vector<Token> m_tokens;
+			size_t m_index = 0;
+			int m_line = 1;
+
+			char peek(size_t offset = 0) const
+			{
+				if (m_index + offset >= m_input.size()) return '\0';
+				return m_input[m_index + offset];
+			}
+
+			char advance()
+			{
+				if (m_index >= m_input.size()) return '\0';
+				char c = m_input[m_index++];
+				if (c == '\n') m_line++;
+				return c;
+			}
+
+			void skipWhitespace()
+			{
+				while (m_index < m_input.size())
+				{
+					char c = peek();
+					if (c == ' ' || c == '\t' || c == '\r' || c == ';')
+					{
+						advance();
+					}
+					else if (c == '\n')
+					{
+						advance();
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			void readNumber()
+			{
+				std::string buffer;
+				bool isFloat = false;
+
+				if (peek() == '-')
+				{
+					buffer += advance();
+				}
+
+				while (std::isdigit(peek()))
+				{
+					buffer += advance();
+				}
+
+				if (peek() == '.' && std::isdigit(peek(1)))
+				{
+					isFloat = true;
+					buffer += advance(); // '.'
+					while (std::isdigit(peek()))
+					{
+						buffer += advance();
+					}
+				}
+
+				TokenType type = isFloat ? TokenType::FLOAT : TokenType::NUMBER;
+				m_tokens.push_back({ type, buffer, m_line });
+			}
+
+			void readIdentifierOrKeyword()
+			{
+				std::string buffer;
+
+				while (std::isalnum(peek()) || peek() == '_')
+				{
+					buffer += advance();
+				}
+
+				while (peek() == '.' && (std::isalpha(peek(1)) || peek(1) == '_'))
+				{
+					buffer += advance();
+
+					while (std::isalnum(peek()) || peek() == '_')
+					{
+						buffer += advance();
+					}
+				}
+
+				auto hashValue = fnv1a_hash(buffer.c_str());
+
+				if (hashValue == consts::KEYWORD_VAR ||
+					hashValue == consts::KEYWORD_WHILE ||
+					hashValue == consts::KEYWORD_IF ||
+					hashValue == consts::KEYWORD_FUNC ||
+					hashValue == consts::KEYWORD_RETURN)
+				{
+					m_tokens.push_back({ TokenType::KEYWORD, buffer, m_line });
+				}
+				else if (buffer == "true" || buffer == "false")
+				{
+					m_tokens.push_back({ TokenType::BOOLEAN, buffer, m_line });
+				}
+				else if (buffer == "include")
+				{
+					m_tokens.push_back({ TokenType::INCLUDE, buffer, m_line });
+				}
+				else
+				{
+					m_tokens.push_back({ TokenType::IDENTIFIER, buffer, m_line });
+				}
+			}
+
+			void readString(char quoteType)
+			{
+				if (peek() == quoteType)
+					m_index++;
+
+				std::string buffer;
+				while (m_index < m_input.size() && m_input[m_index] != quoteType)
+				{
+					char current = m_input[m_index];
+
+					if (current == '\\' && m_index + 1 < m_input.size())
+					{
+						m_index++; // Skip de backslash
+						char escapeChar = m_input[m_index];
+						switch (escapeChar)
+						{
+						case 'n':  buffer += '\n'; break;
+						case 't':  buffer += '\t'; break;
+						case 'r':  buffer += '\r'; break;
+						case '\\': buffer += '\\'; break;
+						case '"':  buffer += '"';  break;
+						case '\'': buffer += '\''; break;
+						default:   buffer += escapeChar; break;
+						}
+						m_index++;
+					}
+					else
+					{
+						buffer += current;
+						m_index++;
+					}
+				}
+
+				if (m_index >= m_input.size())
+				{
+					throw std::runtime_error("[LEXER]: Unterminated string literal at line: " + std::to_string(m_line));
+				}
+
+				m_index++;
+				m_tokens.push_back({ TokenType::STRING, buffer, m_line });
+			}
 
 		public:
 			Lexer(const std::string& fileName) : m_fileName(fileName)
 			{
 				std::ifstream file(m_fileName);
-
-				if(file.is_open())
+				if (file.is_open())
 				{
 					std::stringstream buffer;
 					buffer << file.rdbuf();
 					m_input = buffer.str();
 				}
 				else
-					throw std::runtime_error("Failed to open file: " + m_fileName);
+				{
+					throw std::runtime_error("[LEXER]: Failed to open file: " + m_fileName);
+				}
 			}
 
 			void CompileInput()
 			{
-				std::string m_buffer;
-				int lineNumber = 1;
+				m_tokens.clear();
+				m_index = 0;
+				m_line = 1;
 
-				auto processBuffer = [&]() {
-					if (!m_buffer.empty())
-					{
-						Token t;
-						
-						auto token = fnv1a_hash(m_buffer.c_str());
-
-						if (isdigit(m_buffer[0]) || (m_buffer[0] == '-' && m_buffer.size() > 1 && isdigit(m_buffer[1])))
-						{
-							if (m_buffer.find('.') != std::string::npos)
-								t.type = TokenType::FLOAT;
-							else
-								t.type = TokenType::NUMBER;
-						}
-						else if (m_buffer[0] == '=' || m_buffer[0] == '+' || m_buffer[0] == '-' || m_buffer[0] == '*' || m_buffer[0] == '/')
-							t.type = TokenType::OPERATOR;
-						else if (m_buffer[0] == '\'' || m_buffer[0] == '"')
-							t.type = TokenType::STRING;
-						else if (token == consts::KEYWORD_VAR ||
-								token == consts::KEYWORD_WHILE || 
-								token == consts::KEYWORD_IF ||
-								token == consts::KEYWORD_FUNC ||
-								token == consts::KEYWORD_RETURN)
-							t.type = TokenType::KEYWORD;
-						else if(m_buffer == "true" || m_buffer == "false")
-							t.type = TokenType::BOOLEAN;
-						else if (m_buffer == "include")
-							t.type = TokenType::INCLUDE;
-						else
-							t.type = TokenType::IDENTIFIER;
-
-						t.line = lineNumber;
-						t.value = m_buffer;
-						m_tokens.push_back(t);
-						m_buffer.clear();
-					}
-				};
-
-				for (int i = 0; i < m_input.size(); i++)
+				while (m_index < m_input.size())
 				{
-					char c = m_input[i];
-					if (c == ' ' || c == ';' || c == '\t')
-						processBuffer();
-					else if (c == '\n')
+					skipWhitespace();
+					if (m_index >= m_input.size()) break;
+
+					char c = peek();
+
+					if (std::isdigit(c) || (c == '-' && std::isdigit(peek(1))))
 					{
-						processBuffer();
-						lineNumber++;
+						readNumber();
+						continue;
 					}
-					else if (c == '(' || c == ')' || c == '{' || c == '}' || c == ',')
+
+					if (std::isalpha(c) || c == '_')
 					{
-						processBuffer();
-						Token t;
-						t.type = TokenType::SYMBOL;
-						t.value = std::string(1, c);
-						t.line = lineNumber;
-						m_tokens.push_back(t);
+						readIdentifierOrKeyword();
+						continue;
 					}
-					else if ((c == '=' || c == '+' || c == '*' || c == '/') ||
-						(c == '-' && (i + 1 >= m_input.size() || !isdigit(m_input[i + 1]))))
+
+					if (c == '"' || c == '\'')
 					{
-						if (m_input.substr(i, 2) == "==" || m_input.substr(i, 2) == "!=")
+						readString(c);
+						continue;
+					}
+
+					if (c == '=' || c == '!' || c == '+' || c == '-' || c == '*' || c == '/' || c == '>' || c == '<')
+					{
+						std::string op;
+						op += advance();
+
+						if (peek() == '=')
+							op += advance();
+
+						m_tokens.push_back({ TokenType::OPERATOR, op, m_line });
+						continue;
+					}
+
+					if (c == '&')
+					{
+						advance();
+						if (peek() == '&')
 						{
-							processBuffer();
-							m_tokens.push_back({ TokenType::OPERATOR, m_input.substr(i, 2), lineNumber });
-							i++;
-						}
-						else {
-							processBuffer();
-							m_tokens.push_back({ TokenType::OPERATOR, std::string(1, c), lineNumber });
-						}
-					}
-					else if (c == '&')
-					{
-						processBuffer();
-						if (i + 1 < m_input.size() && m_input[i + 1] == '&')
-						{
-							m_tokens.push_back({ TokenType::OPERATOR, "&&", lineNumber });
-							i++;
+							advance();
+							m_tokens.push_back({ TokenType::OPERATOR, "&&", m_line });
 						}
 						else
-							throw std::runtime_error("Unexpected character '&' at line: " + std::to_string(lineNumber) + ". Did you mean '&&'?");
-					}
-					else if (c == '\'' || c == '"')
-					{
-						char quoteType = c;
-						m_buffer += c;
-						i++;
-						while (i < m_input.size() && m_input[i] != quoteType)
 						{
-							if (m_input[i] == '\\' && i + 1 < m_input.size())
-							{
-								i++;
-								char escapeChar = m_input[i];
-								switch (escapeChar) {
-								case 'n':  m_buffer += '\n'; break;
-								case 't':  m_buffer += '\t'; break;
-								case 'r':  m_buffer += '\r'; break;
-								case '\\': m_buffer += '\\'; break;
-								case '"':  m_buffer += '"';  break;
-								case '\'': m_buffer += '\''; break;
-								default:   m_buffer += escapeChar; break;
-								}
-							} else 
-								m_buffer += m_input[i];
-							i++;
+							throw std::runtime_error("[LEXER]: Unexpected character '&' at line: " + std::to_string(m_line) + ". Did you mean '&&'?");
 						}
-						if (i < m_input.size())
-							m_buffer += quoteType; // Add closing quote
-						else
-							throw std::runtime_error("Unterminated string literal at line: " + std::to_string(lineNumber));
+						continue;
 					}
-					else
-						m_buffer += c;
+
+					if (c == '[' || c == ']')
+					{
+						TokenType type = (c == '[') ? TokenType::LBRACKET : TokenType::RBRACKET;
+						m_tokens.push_back({ type, std::string(1, advance()), m_line });
+						continue;
+					}
+
+					if (c == '(' || c == ')' || c == '{' || c == '}' || c == ',' || c == ':')
+					{
+						m_tokens.push_back({ TokenType::SYMBOL, std::string(1, advance()), m_line });
+						continue;
+					}
+
+					throw std::runtime_error("[LEXER]: Unknown character '" + std::string(1, c) + "' at line: " + std::to_string(m_line));
 				}
-				processBuffer();
 			}
 
-			const std::vector<Token>& GetTokens() const {
+			const std::vector<Token>& GetTokens() const
+			{
 				return m_tokens;
 			}
 		};

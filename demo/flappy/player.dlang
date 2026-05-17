@@ -1,0 +1,31 @@
+var player = {
+    'x': 136.0,
+    'y': 236.0,
+    'width': 38.0,
+    'height': 36.0,
+    'velocityY': 0.0, 
+    'gravity': 980.0,
+    'jumpForce': -350.0
+}
+
+func UpdatePlayer(deltaTime) {
+    gfx.draw_image(images['flappy'], player['x'], player['y'], 128.0, 128.0)
+
+    player['velocityY'] = player['velocityY'] + player['gravity'] * deltaTime
+
+    if(gfx.key_pressed(32)) {
+        player['velocityY'] = player['jumpForce']
+        gfx.play_sound(sounds['fly'])
+    }
+
+    player['y'] = player['y'] + player['velocityY'] * deltaTime
+    if(player['y'] > 600.0 - 128.0) {
+        ResetGame()
+        gfx.play_sound(sounds['die'])
+    }
+
+    if(player['y'] < 0.0) {
+        player['y'] = 0.0
+        player['velocityY'] = 0.0
+    }
+}

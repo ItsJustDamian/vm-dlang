@@ -1,0 +1,77 @@
+var cloud1 = {
+    'x': 100.0,
+    'y': 80.0
+}
+
+var cloud2 = {
+    'x': 350.0,
+    'y': 180.0
+}
+
+var cloud3 = {
+    'x': 600.0,
+    'y': 120.0
+}
+
+var cloud4 = {
+    'x': 850.0,
+    'y': 200.0
+}
+
+var cloud5 = {
+    'x': 1100.0,
+    'y': 150.0
+}
+
+var cloud6 = {
+    'x': 1350.0,
+    'y': 100.0
+}
+
+var cloudSpeed = 40.0
+
+func UpdateBackground(deltaTime) {
+    cloud1['x'] = cloud1['x'] - cloudSpeed * deltaTime
+    cloud2['x'] = cloud2['x'] - cloudSpeed * deltaTime
+    cloud3['x'] = cloud3['x'] - cloudSpeed * deltaTime
+    cloud4['x'] = cloud4['x'] - cloudSpeed * deltaTime
+    cloud5['x'] = cloud5['x'] - cloudSpeed * deltaTime
+    cloud6['x'] = cloud6['x'] - cloudSpeed * deltaTime
+
+    if (cloud1['x'] < -96.0) {
+        cloud1['x'] = 450.0
+        cloud1['y'] = 40.0 + player['y'] * 0.2
+    }
+
+    if (cloud2['x'] < -96.0) {
+        cloud2['x'] = 900.0
+        cloud2['y'] = 180.0 + player['y'] * 0.25
+    }
+
+    if (cloud3['x'] < -96.0) {
+        cloud3['x'] = 900.0
+        cloud3['y'] = 120.0 + player['y'] * 0.3
+    }
+
+    if (cloud4['x'] < -96.0) {
+        cloud4['x'] = 900.0
+        cloud4['y'] = 200.0 + player['y'] * 0.45
+    }
+
+    if (cloud5['x'] < -96.0) {
+        cloud5['x'] = 900.0
+        cloud5['y'] = 150.0 + player['y'] * 0.5
+    }
+
+    if (cloud6['x'] < -96.0) {
+        cloud6['x'] = 900.0
+        cloud6['y'] = 100.0 + player['y'] * 0.65
+    }
+
+    gfx.draw_image(images['cloud'], cloud1['x'], cloud1['y'], 48.0, 17.0)
+    gfx.draw_image(images['cloud'], cloud2['x'], cloud2['y'], 48.0, 17.0)
+    gfx.draw_image(images['cloud'], cloud3['x'], cloud3['y'], 48.0, 17.0)
+    gfx.draw_image(images['cloud'], cloud4['x'], cloud4['y'], 48.0, 17.0)
+    gfx.draw_image(images['cloud'], cloud5['x'], cloud5['y'], 48.0, 17.0)
+    gfx.draw_image(images['cloud'], cloud6['x'], cloud6['y'], 48.0, 17.0)
+}

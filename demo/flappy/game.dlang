@@ -1,0 +1,22 @@
+var GameState = {
+    'score': 0,
+    'highscore': 0,
+    'state': 0
+}
+
+func ResetGame() {
+    if (GameState['score'] > GameState['highscore']) {
+        GameState['highscore'] = GameState['score']
+    }
+
+    GameState['score'] = 0
+    player['y'] = 236.0
+    player['velocityY'] = 0.0
+    GameState['state'] = 0
+    pipe1['x'] = 400.0
+    pipe1['y'] = 150.0
+    pipe1['passed'] = 0
+    pipe2['x'] = 680.0
+    pipe2['y'] = 250.0
+    pipe2['passed'] = 0
+}

@@ -1,0 +1,67 @@
+var pipe1 = {
+    'x': 680.0,
+    'y': 150.0,
+    'passed': 0
+}
+
+var pipe2 = {
+    'x': 900.0,
+    'y': 200.0,
+    'passed': 0
+}
+
+var pipeSettings = {
+    'width': 80.0,
+    'gap': 180.0,
+    'speed': 200.0
+}
+
+func CheckCollision(px, py, pw, ph) {
+    var hx = player['x'] + 45.0
+    var hy = player['y'] + 45.0
+    if (hx < px + pw && hx + player['width'] > px && hy < py + ph && hy + player['height'] > py) {
+        ResetGame()
+    }
+}
+
+func UpdatePipes(deltaTime) {
+    pipe1['x'] = pipe1['x'] - pipeSettings['speed'] * deltaTime
+    pipe2['x'] = pipe2['x'] - pipeSettings['speed'] * deltaTime
+
+    if (pipe1['x'] < 0.0 - pipeSettings['width']) {
+        pipe1['x'] = 480.0
+        pipe1['y'] = 100.0 + player['y'] * 0.2
+        pipe1['passed'] = 0
+    }
+
+    if (pipe2['x'] < 0.0 - pipeSettings['width']) {
+        pipe2['x'] = 480.0
+        pipe2['y'] = 140.0 + player['y'] * 0.1
+        pipe2['passed'] = 0
+    }
+
+    if (pipe1['passed'] == 0 && pipe1['x'] + pipeSettings['width'] < player['x']) {
+        GameState['score'] = GameState['score'] + 1
+        pipe1['passed'] = 1
+        gfx.play_sound(sounds['point'])
+
+    }
+
+    if (pipe2['passed'] == 0 && pipe2['x'] + pipeSettings['width'] < player['x']) {
+        GameState['score'] = GameState['score'] + 1
+        pipe2['passed'] = 1
+        gfx.play_sound(sounds['point'])
+    }
+
+    gfx.draw_image(images['top_pipe'], pipe1['x'], pipe1['y'] - 500.0, pipeSettings['width'], 500.0)
+    gfx.draw_image(images['bottom_pipe'], pipe1['x'], pipe1['y'] + pipeSettings['gap'], pipeSettings['width'], 500.0)
+
+    gfx.draw_image(images['top_pipe'], pipe2['x'], pipe2['y'] - 500.0, pipeSettings['width'], 500.0)
+    gfx.draw_image(images['bottom_pipe'], pipe2['x'], pipe2['y'] + pipeSettings['gap'], pipeSettings['width'], 500.0)
+
+    CheckCollision(pipe1['x'], 0.0, pipeSettings['width'], pipe1['y'])
+    CheckCollision(pipe1['x'], pipe1['y'] + pipeSettings['gap'], pipeSettings['width'], 500.0)
+    
+    CheckCollision(pipe2['x'], 0.0, pipeSettings['width'], pipe2['y'])
+    CheckCollision(pipe2['x'], pipe2['y'] + pipeSettings['gap'], pipeSettings['width'], 500.0)
+}
