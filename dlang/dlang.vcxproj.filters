@@ -238,6 +238,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="test.dlang" />
+    <None Include="main.dlang" />
   </ItemGroup>
 </Project>

@@ -151,22 +151,17 @@ namespace dlang
 			{
 				size_t savedPos = m_pos;
 
-				auto id = consume(); // Consume 'identifier' token
-				consume(); // Consume '[' token
-
 				parseExpression();
-
-				if (consume().type != lexer::TokenType::RBRACKET) { // Consume ']' token
-					throw std::runtime_error("[PARSER]: Expected ']' in array mutation.");
-				}
 
 				if (!isAtEnd() && peek().value == "=")
 				{
 					consume(); // Consume '=' token
-					parseExpression();
 
-					m_bytecode.push_back(Opcode::LOAD_VAR);
-					emitString(id.value);
+					if (!m_bytecode.empty() && m_bytecode.back() == Opcode::LOAD_ARRAY) {
+						m_bytecode.pop_back();
+					}
+
+					parseExpression();
 
 					m_bytecode.push_back(0x64);
 				}

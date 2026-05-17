@@ -216,7 +216,7 @@
     <ClInclude Include="dlang\vm.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="test.dlang" />
+    <None Include="main.dlang" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

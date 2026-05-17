@@ -1,0 +1,17 @@
+var test = {
+	'Hello': 'World',
+	'test': { 10, 20, 30 }
+}
+
+test['test'][1] = 'Hello World'
+print(test['test'][1] + '\n')
+
+var test2 = { 10, 20 }
+
+print(sizeof(test2) + '\n')
+
+test2[sizeof(test2)] = 30
+
+print(sizeof(test2) + '\n')
+
+print(test2[2] + '\n')

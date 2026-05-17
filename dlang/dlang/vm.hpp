@@ -90,6 +90,10 @@ namespace dlang
 		private:
 			int addToStringPool(const std::string& str)
 			{
+				auto it = std::find(m_stringPool.begin(), m_stringPool.end(), str);
+				if (it != m_stringPool.end())
+					return static_cast<int>(std::distance(m_stringPool.begin(), it));
+
 				m_stringPool.push_back(str);
 				return static_cast<int>(m_stringPool.size() - 1);
 			}
@@ -524,9 +528,12 @@ namespace dlang
 						if (arrayObj.arrayElements == nullptr)
 							throw std::runtime_error("[VM]: Array object has null arrayElements pointer.");
 
-						if (index < 0 || index >= arrayObj.arrayElements->size())
+						if (index < 0)
 							throw std::runtime_error("[VM]: Array index out of bounds: " + std::to_string(index));
 						
+						if(index >= arrayObj.arrayElements->size())
+							arrayObj.arrayElements->resize(index + 1);
+
 						(*arrayObj.arrayElements)[index] = value;
 					} break;
 
@@ -536,8 +543,11 @@ namespace dlang
 
 						if (arrayObj.type == DlangType::Array)
 						{
-							if (indexObj.intValue < 0 || arrayObj.arrayElements == nullptr || indexObj.intValue >= arrayObj.arrayElements->size())
+							if (indexObj.intValue < 0 || arrayObj.arrayElements == nullptr)
 								throw std::runtime_error("[VM]: Array index out of bounds: " + std::to_string(indexObj.intValue));
+
+							if(indexObj.intValue >= arrayObj.arrayElements->size())
+								arrayObj.arrayElements->resize(indexObj.intValue + 1);
 
 							push(arrayObj.arrayElements->at(indexObj.intValue));
 						}
@@ -584,21 +594,46 @@ namespace dlang
 					} break;
 
 					case Opcode::STORE_MAP: {
+						auto valueObj = pop();
+						auto indexObj = pop();
 						auto mapObj = pop();
-						auto value = pop();
-						auto keyObj = pop();
 
-						if (mapObj.type != DlangType::Map)
-							throw std::runtime_error("[VM]: Attempting to index a non-map object.");
+						if (mapObj.type == DlangType::Map)
+						{
+							if (mapObj.mapElements == nullptr)
+								throw std::runtime_error("[VM]: Map object has null mapElements pointer.");
 
-						if (mapObj.mapElements == nullptr)
-							throw std::runtime_error("[VM]: Map object has null mapElements pointer.");
+							std::string key;
+							if (indexObj.type == DlangType::String) {
+								key = getStringFromPool(indexObj.intValue);
+							}
+							else if (indexObj.type == DlangType::Integer) {
+								key = std::to_string(indexObj.intValue);
+							}
+							else if (indexObj.type == DlangType::Float) {
+								key = std::to_string(indexObj.floatValue);
+							}
+							else {
+								throw std::runtime_error("[VM]: Attempting to use an invalid key type in a map.");
+							}
 
-						if (keyObj.type != DlangType::String)
-							throw std::runtime_error("[VM]: Attempting to use a non-string key in a map.");
+							(*mapObj.mapElements)[key] = valueObj;
+						}
+						else if (mapObj.type == DlangType::Array)
+						{
+							if (mapObj.arrayElements == nullptr)
+								throw std::runtime_error("[VM]: Array object has null arrayElements pointer.");
 
-						std::string key = getStringFromPool(keyObj.intValue);
-						(*mapObj.mapElements)[key] = value;
+							int index = indexObj.intValue;
+							if (index < 0)
+								throw std::runtime_error("[VM]: Array index out of bounds during assignment: " + std::to_string(index));
+
+							if(index >= static_cast<int>(mapObj.arrayElements->size()))
+								mapObj.arrayElements->resize(index + 1);
+
+							(*mapObj.arrayElements)[index] = valueObj;
+						}
+						else throw std::runtime_error("[VM]: Attempting to index a non-map/array object.");
 					} break;
 
 					default:

@@ -40,5 +40,39 @@ namespace dlang::functions::utils
 	{
 		vm->registerNativeFunction("print", print_native, "*", 1);
 		vm->registerNativeFunction("messagebox", native_messagebox, "*", 2);
+	
+		vm->registerNativeFunction("sizeof", [](vm::DLangVirtualMachine* vm) -> bool {
+			auto typeObj = vm->pop();
+			int size = 0;
+			switch (typeObj.type)
+			{
+			case DlangType::Integer:
+				size = sizeof(int);
+				break;
+			case DlangType::Float:
+				size = sizeof(float);
+				break;
+			case DlangType::String:
+				size = sizeof(std::string);
+				break;
+			case DlangType::Boolean:
+				size = sizeof(bool);
+				break;
+			case DlangType::Pointer:
+				size = sizeof(void*);
+				break;
+			case DlangType::Array:
+				size = typeObj.arrayElements->size();
+				break;
+			case DlangType::Map:
+				size = typeObj.mapElements->size();
+				break;
+
+			default:
+				throw std::runtime_error("Unsupported type for sizeof function.");
+			}
+			vm->push(DlangObject(size));
+			return true;
+		}, "*", 1);
 	}
 }
