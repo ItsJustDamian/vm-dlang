@@ -13,7 +13,7 @@ func UpdatePlayer(deltaTime) {
 
     player['velocityY'] = player['velocityY'] + player['gravity'] * deltaTime
 
-    if(gfx.key_pressed(32)) {
+    if(gfx.key_pressed('space')) {
         player['velocityY'] = player['jumpForce']
         gfx.play_sound(sounds['fly'])
     }

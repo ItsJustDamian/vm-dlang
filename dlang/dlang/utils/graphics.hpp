@@ -54,6 +54,47 @@ namespace dlang::functions::graphics
 	static float deltaTime = 0.0f;
 	static GfxInput input;
 
+	inline int GetKeyIndex(const std::string& c)
+	{
+		auto upperString = [](const std::string& str) -> std::string {
+			std::string result = str;
+			for (char& ch : result)
+				ch = toupper(ch);
+			return result;
+		};
+
+		if (c.length() == 1)
+		{
+			char ch = toupper(c[0]);
+			if (ch >= 'A' && ch <= 'Z')
+				return ch;
+			if (ch >= '0' && ch <= '9')
+				return ch;
+		}
+		else
+		{
+			if (upperString(c) == "LEFT")
+				return VK_LEFT;
+			if (upperString(c) == "RIGHT")
+				return VK_RIGHT;
+			if (upperString(c) == "UP")
+				return VK_UP;
+			if (upperString(c) == "DOWN")
+				return VK_DOWN;
+			if (upperString(c) == "SPACE")
+				return VK_SPACE;
+			if (upperString(c) == "SHIFT")
+				return VK_SHIFT;
+			if (upperString(c) == "CTRL")
+				return VK_CONTROL;
+			if (upperString(c) == "ALT")
+				return VK_MENU;
+			if(upperString(c) == "ENTER")
+			return VK_RETURN;
+		}
+		throw std::runtime_error("Invalid key name: '" + c + "'");
+	}
+
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
@@ -340,11 +381,15 @@ namespace dlang::functions::graphics
 			}, "gfx", 3);
 
 		vm->registerNativeFunction("key_pressed", [](vm::DLangVirtualMachine* vm) -> bool {
-			if (!vm->checkStack({ DlangType::Integer }))
-				throw std::runtime_error("Invalid arguments for gfx.key_pressed, expected (int keyCode)");
-
+			int k = 0;
 			auto keyCode = vm->pop();
-			int k = keyCode.intValue;
+			if (keyCode.type == DlangType::String)
+				k = GetKeyIndex(vm->getStringFromPool(keyCode.intValue));
+			else if (keyCode.type == DlangType::Integer)
+				k = keyCode.intValue;
+			else
+				throw std::runtime_error("Invalid argument type for gfx.key_pressed, expected (int keyCode) or (string keyName)");
+
 			bool pressed = input.keys[k].first && !input.keys[k].second;
 
 			if (pressed) {
@@ -356,11 +401,16 @@ namespace dlang::functions::graphics
 			}, "gfx", 1);
 
 		vm->registerNativeFunction("key_down", [](vm::DLangVirtualMachine* vm) -> bool {
-			if (!vm->checkStack({ DlangType::Integer }))
-				throw std::runtime_error("Invalid arguments for gfx.key_down, expected (int keyCode)");
-
+			int k = 0;
 			auto keyCode = vm->pop();
-			vm->push(DlangObject(input.keys[keyCode.intValue].first ? 1 : 0));
+			if (keyCode.type == DlangType::String)
+				k = GetKeyIndex(vm->getStringFromPool(keyCode.intValue));
+			else if (keyCode.type == DlangType::Integer)
+				k = keyCode.intValue;
+			else
+				throw std::runtime_error("Invalid argument type for gfx.key_pressed, expected (int keyCode) or (string keyName)");
+
+			vm->push(DlangObject(input.keys[k].first ? 1 : 0));
 			return true;
 			}, "gfx", 1);
 
