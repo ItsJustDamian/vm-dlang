@@ -1,0 +1,69 @@
+var player1 = {
+    'x': 0.0,
+    'y': 250.0,
+    'score': 0,
+}
+
+var player2 = {
+    'x': 780.0,
+    'y': 250.0,
+    'score': 0,
+}
+
+var playerSpeed = 400
+var playerSize = {
+    'width': 20.0,
+    'height': 100.0,
+}
+
+func UpdatePlayers(deltaTime) {
+    if(gfx.key_down('W')) {
+        player1['y'] = player1['y'] - playerSpeed * deltaTime
+    }
+    if(gfx.key_down('S')) {
+        player1['y'] = player1['y'] + playerSpeed * deltaTime
+    }
+
+    if(gfx.key_down('UP')) {
+        player2['y'] = player2['y'] - playerSpeed * deltaTime
+    }
+    if(gfx.key_down('DOWN')) {
+        player2['y'] = player2['y'] + playerSpeed * deltaTime
+    }
+
+    if(player1['y'] < 0) {
+        player1['y'] = 0
+    }
+    if(player1['y'] > 600 - playerSize['height']) {
+        player1['y'] = 600 - playerSize['height']
+    }
+
+    if(player2['y'] < 0) {
+        player2['y'] = 0
+    }
+    if(player2['y'] > 600 - playerSize['height']) {
+        player2['y'] = 600 - playerSize['height']
+    }
+
+    gfx.draw_rect(player1['x'], player1['y'], 20, 100, playerColor)
+    gfx.draw_rect(player2['x'], player2['y'], 20, 100, playerColor)
+    
+}
+
+func drawScores() {
+    var player1Color = neutralColor
+    var player2Color = neutralColor
+
+    if(player1['score'] > player2['score']) {
+        player1Color = winningColor
+        player2Color = losingColor
+    }
+
+    if(player2['score'] > player1['score']) {
+        player1Color = losingColor
+        player2Color = winningColor
+    }
+
+    gfx.draw_text("Player 1: " + player1['score'], 10.0, 10.0, player1Color)
+    gfx.draw_text("Player 2: " + player2['score'], 790.0, 10.0, player2Color, 2)
+}

@@ -1,17 +1,42 @@
-var test = {
-	'Hello': 'World',
-	'test': { 10, 20, 30 }
-}
+print('=== STARTING MATH UNIT TESTS ===\n')
 
-test['test'][1] = 'Hello World'
-print(test['test'][1] + '\n')
+var absInt = math.abs(-10)
+var absFloat = math.abs(-5.5)
+print('abs(-10)    | Expected: 10   | Got: ' + absInt + '\n')
+print('abs(-5.5)   | Expected: 5.5  | Got: ' + absFloat + '\n')
 
-var test2 = { 10, 20 }
+var sqrtInt = math.sqrt(16)
+var sqrtFloat = math.sqrt(20.25)
+print('sqrt(16)    | Expected: 4    | Got: ' + sqrtInt + '\n')
+print('sqrt(20.25) | Expected: 4.5  | Got: ' + sqrtFloat + '\n')
 
-print(sizeof(test2) + '\n')
+var powInt = math.pow(2, 3)
+var powFloat = math.pow(2.5, 2)
+print('pow(2, 3)   | Expected: 8    | Got: ' + powInt + '\n')
+print('pow(2.5, 2) | Expected: 6.25 | Got: ' + powFloat + '\n')
 
-test2[sizeof(test2)] = 30
+var f = math.floor(4.7)
+var c = math.ceil(4.2)
+var r1 = math.round(4.4)
+var r2 = math.round(4.6)
+print('floor(4.7)  | Expected: 4    | Got: ' + f + '\n')
+print('ceil(4.2)   | Expected: 5    | Got: ' + c + '\n')
+print('round(4.4)  | Expected: 4    | Got: ' + r1 + '\n')
+print('round(4.6)  | Expected: 5    | Got: ' + r2 + '\n')
 
-print(sizeof(test2) + '\n')
+var s = math.sin(0.0)
+var co = math.cos(0.0)
+var t = math.tan(0.0)
+print('sin(0.0)    | Expected: 0.0  | Got: ' + s + '\n')
+print('cos(0.0)    | Expected: 1.0  | Got: ' + co + '\n')
+print('tan(0.0)    | Expected: 0.0  | Got: ' + t + '\n')
 
-print(test2[2] + '\n')
+math.random_seed(1234)
+
+var rand1 = math.random(100)
+var rand2 = math.random(50, 60)
+
+print('random(100) | Got (0-100): ' + rand1 + '\n')
+print('random(50,60)| Got (50-60): ' + rand2 + '\n')
+
+print('=== MATH UNIT TESTS COMPLETED ===\n')

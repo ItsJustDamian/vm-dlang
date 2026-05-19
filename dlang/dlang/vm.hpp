@@ -214,6 +214,8 @@ namespace dlang
 							auto convertToString = [&](DlangObject& obj) {
 								if (obj.type == DlangType::String) return getStringFromPool(obj.intValue);
 								if (obj.type == DlangType::Float)  return std::to_string(obj.floatValue); // Gebruik .floatValue!
+								if (obj.type == DlangType::Array) return obj.arrayToString();
+								if (obj.type == DlangType::Map) return obj.mapToString();
 								return std::to_string(obj.intValue);
 								};
 
@@ -407,6 +409,16 @@ namespace dlang
 						bool rightTrue = (right.type == DlangType::Float) ? (right.floatValue != 0.0f) : (right.intValue != 0);
 
 						push(DlangObject(leftTrue && rightTrue ? 1 : 0));
+					} break;
+
+					case Opcode::LOGIC_OR: {
+						auto right = pop();
+						auto left = pop();
+
+						bool leftBool = left.intValue != 0;
+						bool rightBool = right.intValue != 0;
+
+						push(DlangObject(leftBool || rightBool));
 					} break;
 
 					case Opcode::JUMP_IF_FALSE: {

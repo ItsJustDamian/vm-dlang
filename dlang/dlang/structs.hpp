@@ -57,6 +57,7 @@ namespace dlang
 		GREATER_OR_EQUAL_THAN = 0x26,
 		NOT_EQUALS_TO = 0x27,
 		LOGIC_AND = 0x50,
+		LOGIC_OR = 0x51,
 
 		DEF_FUNC = 0x40,
 		END_FUNC = 0x41,
@@ -95,6 +96,60 @@ namespace dlang
 		DlangObject(std::unordered_map<std::string, DlangObject> elements) : type(DlangType::Map)
 		{
 			mapElements = new std::unordered_map<std::string, DlangObject>(std::move(elements));
+		}
+
+		inline std::string elementToString(DlangObject obj)
+		{
+			switch (obj.type)
+			{
+			case DlangType::Integer:
+				return std::to_string(obj.intValue);
+				break;
+			case DlangType::Float:
+				return std::to_string(obj.floatValue);
+				break;
+			case DlangType::Array:
+				return "{ARRAY:" + std::to_string(obj.arrayElements->size()) + "}";
+				break;
+			case DlangType::Map:
+				return "{MAP:" + std::to_string(obj.mapElements->size()) + "}";
+			case DlangType::String:
+				return "{STRING:" + std::to_string(obj.intValue) + "}";
+				break;
+			}
+		}
+
+		inline std::string arrayToString()
+		{
+			if (type != DlangType::Array || arrayElements == nullptr)
+				throw std::runtime_error("Attempting to convert a non-array object to string.");
+
+			std::stringstream ss;
+			ss << "{ ";
+			for (size_t i = 0; i < arrayElements->size(); i++)
+				ss << elementToString((*arrayElements)[i]) << (i < arrayElements->size() - 1 ? ", " : " ");
+			ss << "}[" << arrayElements->size() << "]";
+
+			return ss.str();
+		}
+
+		inline std::string mapToString()
+		{
+			if (type != DlangType::Map || mapElements == nullptr)
+				throw std::runtime_error("Attempting to convert a non-map object to string.");
+
+			std::stringstream ss;
+			ss << "{ ";
+			size_t count = 0;
+			for (const auto& pair : *mapElements)
+			{
+				ss << pair.first << ": " << elementToString(pair.second); // Assuming values are integers for simplicity
+				if (count < mapElements->size() - 1)
+					ss << ", ";
+				count++;
+			}
+			ss << "}[" << mapElements->size() << "]";
+			return ss.str();
 		}
 	};
 

@@ -112,6 +112,28 @@ namespace dlang
 						parseAssignment();
 						return;
 					}
+
+					if (peek(1).value == "+=")
+					{
+						parseCompoundAssignment(Opcode::ADD);
+						return;
+					}
+					if (peek(1).value == "-=")
+					{
+						parseCompoundAssignment(Opcode::SUB);
+						return;
+					}
+					if(peek(1).value == "*=")
+					{
+						parseCompoundAssignment(Opcode::MP);
+						return;
+					}
+					if (peek(1).value == "/=")
+					{
+						parseCompoundAssignment(Opcode::DIV);
+						return;
+					}
+
 					if (peek(1).type == lexer::TokenType::LBRACKET) {
 						parseArrayMutationOrExpression();
 						return;
@@ -119,6 +141,21 @@ namespace dlang
 				}
 
 				parseExpression();
+			}
+
+			void parseCompoundAssignment(uint8_t opCode)
+			{
+				auto id = consume(); // Consume 'identifier' token
+				consume(); // Consume '+=' or '-=' token
+
+				m_bytecode.push_back(Opcode::LOAD_VAR);
+				emitString(id.value);
+
+				parseExpression();
+
+				m_bytecode.push_back(opCode);
+				m_bytecode.push_back(Opcode::STORE_VAR);
+				emitString(id.value);
 			}
 
 			void parseDeclaration()
@@ -163,7 +200,7 @@ namespace dlang
 
 					parseExpression();
 
-					m_bytecode.push_back(0x64);
+					m_bytecode.push_back(Opcode::STORE_MAP);
 				}
 				else
 				{
@@ -347,9 +384,20 @@ namespace dlang
 				}
 			}
 
-			void parseExpression()
+			void parseLogicalOr()
 			{
 				parseLogicalAnd();
+				while (!isAtEnd() && peek().value == "||")
+				{
+					consume(); // Consume '||' token
+					parseLogicalAnd();
+					m_bytecode.push_back(Opcode::LOGIC_OR);
+				}
+			}
+
+			void parseExpression()
+			{
+				parseLogicalOr();
 			}
 
 			void parseWhile()

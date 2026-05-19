@@ -261,10 +261,19 @@ namespace dlang
 							advance();
 							m_tokens.push_back({ TokenType::OPERATOR, "&&", m_line });
 						}
-						else
+						else throw std::runtime_error("[LEXER]: Unexpected character '&' at line: " + std::to_string(m_line) + ". Did you mean '&&'?");
+						continue;
+					}
+
+					if (c == '|')
+					{
+						advance();
+						if (peek() == '|')
 						{
-							throw std::runtime_error("[LEXER]: Unexpected character '&' at line: " + std::to_string(m_line) + ". Did you mean '&&'?");
+							advance();
+							m_tokens.push_back({ TokenType::OPERATOR, "||", m_line });
 						}
+						else throw std::runtime_error("[LEXER]: Unexpected character '|' at line: " + std::to_string(m_line) + ". Did you mean '||'?");
 						continue;
 					}
 

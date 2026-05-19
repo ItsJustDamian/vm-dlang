@@ -20,6 +20,13 @@ namespace dlang::functions::utils
 				break;
 			case dlang::DlangType::Float:
 				printf("%f", obj.floatValue);
+				break;
+			case dlang::DlangType::Array:
+				printf("%s", obj.arrayToString().c_str());
+				break;
+			case dlang::DlangType::Map:
+				printf("%s", obj.mapToString().c_str());
+				break;
 			}
 		}
 

@@ -6,6 +6,7 @@
 #include "dlang/parser.hpp"
 #include "dlang/utils/utils.hpp"
 #include "dlang/utils/graphics.hpp"
+#include "dlang/utils/math.hpp"
 
 int main(int argc, char** argv)
 {
@@ -22,6 +23,7 @@ int main(int argc, char** argv)
 		dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
 		dlang::functions::utils::initFunctions(&vm);
 		dlang::functions::graphics::initFunctions(&vm);
+		dlang::functions::math::initFunctions(&vm);
 
 
 		dlang::lexer::Lexer lexer = dlang::lexer::Lexer(fileName);

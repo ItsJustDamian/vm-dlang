@@ -1,0 +1,27 @@
+var backgroundColor = gfx.color(60, 187, 207)
+var playerColor = gfx.color(255, 255, 255)
+
+var neutralColor = gfx.color(40, 40, 40)
+var winningColor = gfx.color(255, 215, 0)
+var losingColor = gfx.color(255, 0, 0)
+
+math.random_seed()
+
+include("player.dlang")
+include("ball.dlang")
+
+gfx.init("Pong Game", 800, 600)
+
+while(gfx.window_closed() != 1) {
+    var deltaTime = gfx.get_deltatime()
+
+    gfx.begin()
+    gfx.clear(backgroundColor)
+
+    UpdatePlayers(deltaTime)
+    UpdateBall(deltaTime)
+    drawScores()
+
+    gfx.end()
+    gfx.update()
+}

@@ -1,0 +1,53 @@
+var ball = {
+    'x': 400.0,
+    'y': 300.0,
+    'speedX': 200.0,
+    'speedY': 200.0,
+    'size': 15.0,
+}
+
+func ResetBall() {
+    ball['x'] = 400.0
+    ball['y'] = 300.0
+
+    var randomValue = math.random(0, 1)
+
+    if(randomValue == 0) {
+        ball['speedX'] = 200.0
+    }
+
+    if(randomValue == 1) {
+        ball['speedX'] = -200.0
+    }
+}
+
+func UpdateBall(deltaTime) {
+    ball['x'] = ball['x'] + ball['speedX'] * deltaTime
+    ball['y'] = ball['y'] + ball['speedY'] * deltaTime
+
+    gfx.draw_circle(ball['x'], ball['y'], ball['size'], playerColor)
+
+    if(ball['y'] <= 0 + ball['size'] || ball['y'] >= 600 - ball['size']) {
+        ball['speedY'] = ball['speedY'] * -1
+    }
+
+    if(ball['x'] - ball['size'] <= player1['x'] + playerSize['width'] &&
+       ball['y'] >= player1['y'] && ball['y'] <= player1['y'] + playerSize['height']) {
+        ball['speedX'] = ball['speedX'] * -1
+    }
+
+    if(ball['x'] + ball['size'] >= player2['x'] &&
+       ball['y'] >= player2['y'] && ball['y'] <= player2['y'] + playerSize['height']) {
+        ball['speedX'] = ball['speedX'] * -1
+    }
+
+    if(ball['x'] < 0) {
+        player2['score'] = player2['score'] + 1
+        ResetBall()
+    }
+
+    if(ball['x'] > 800) {
+        player1['score'] = player1['score'] + 1
+        ResetBall()
+    }
+}
