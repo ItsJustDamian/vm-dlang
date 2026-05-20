@@ -3,5 +3,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="dlang-ide/dlang-ide.vcxproj" Id="930fed37-882e-4070-8c7e-83b9b942f1cb" />
   <Project Path="dlang/dlang.vcxproj" Id="b1835d4d-0530-45e7-a76d-eb48ed6cab46" />
 </Solution>
