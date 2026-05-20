@@ -138,6 +138,20 @@
     <ClCompile Include="imgui-addons\TextEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="addons\curl\curl.h" />
+    <ClInclude Include="addons\curl\curlver.h" />
+    <ClInclude Include="addons\curl\easy.h" />
+    <ClInclude Include="addons\curl\header.h" />
+    <ClInclude Include="addons\curl\mprintf.h" />
+    <ClInclude Include="addons\curl\multi.h" />
+    <ClInclude Include="addons\curl\options.h" />
+    <ClInclude Include="addons\curl\stdcheaders.h" />
+    <ClInclude Include="addons\curl\system.h" />
+    <ClInclude Include="addons\curl\typecheck-gcc.h" />
+    <ClInclude Include="addons\curl\urlapi.h" />
+    <ClInclude Include="addons\curl\websockets.h" />
+    <ClInclude Include="addons\helpers.hpp" />
+    <ClInclude Include="addons\json.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_dx11.h" />
@@ -147,6 +161,11 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="imgui-addons\TextEditor.h" />
+    <ClInclude Include="templates\cmakelist.hpp" />
+    <ClInclude Include="templates\entry.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libcurl.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

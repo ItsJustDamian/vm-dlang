@@ -20,18 +20,46 @@ int main(int argc, char** argv)
 		auto fileName = argv[1];
 		auto start = std::chrono::high_resolution_clock::now();
 
-		dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
-		dlang::functions::utils::initFunctions(&vm);
-		dlang::functions::graphics::initFunctions(&vm);
-		dlang::functions::math::initFunctions(&vm);
-
-
 		dlang::lexer::Lexer lexer = dlang::lexer::Lexer(fileName);
 		lexer.CompileInput();
 
 		dlang::parser::Parser parser = dlang::parser::Parser(lexer.GetTokens());
-
 		parser.Parse();
+
+		if (argc >= 3 && !strcmp(argv[2], "--save"))
+		{
+			int xorByte = -1;
+			if (argc == 4)
+				xorByte = std::stoi(argv[3]);
+
+			printf("Saving bytecode to bytecode.hpp with XOR byte: %d\n", xorByte);
+
+			auto byteCode = parser.GetBytecode();
+			std::stringstream ss;
+			ss << "#pragma once\n#include <vector>\n#include <cstdint>\n\nnamespace dlang {\n    namespace bytecode {\n		inline int xorByte = 0x" << std::hex << xorByte << ";\n        inline std::vector<uint8_t> getBytecode() {\n            return {";
+			ss << std::hex;
+			for (int i = 0; i < byteCode.size(); i++)
+			{
+				ss << "0x" << static_cast<int>((xorByte == -1 ? byteCode[i] : byteCode[i] ^ xorByte));
+				if(i != byteCode.size() - 1)
+					ss << ", ";
+			}
+			ss << "};\n        }\n    }\n}\n";
+
+			std::ofstream f("bytecode.hpp");
+			if (f.is_open())
+			{
+				f << ss.str();
+				f.close();
+			}
+
+			return 0;
+		}
+
+		dlang::vm::DLangVirtualMachine vm = dlang::vm::DLangVirtualMachine();
+		dlang::functions::utils::initFunctions(&vm);
+		dlang::functions::graphics::initFunctions(&vm);
+		dlang::functions::math::initFunctions(&vm);
 
 		vm.eval(parser.GetBytecode());
 
