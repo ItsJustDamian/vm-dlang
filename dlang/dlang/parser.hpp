@@ -20,12 +20,12 @@ namespace dlang
 			std::vector<std::uint8_t> m_bytecode;
 			size_t m_pos = 0;
 
-			lexer::Token peek(size_t offset = 0) const
+			lexer::Token peek(size_t offset = 0)
 			{
 				if (m_pos + offset < m_tokens.size())
 					return m_tokens.at(m_pos + offset);
 				else
-					throw std::runtime_error("[PARSER]: Unexpected end of tokens.");
+					throw std::runtime_error("[PARSER]: Unexpected end of tokens. " + BinarySection());
 			}
 
 			lexer::Token consume()
@@ -33,7 +33,7 @@ namespace dlang
 				if (m_pos < m_tokens.size())
 					return m_tokens.at(m_pos++);
 				else
-					throw std::runtime_error("[PARSER]: Unexpected end of tokens.");
+					throw std::runtime_error("[PARSER]: Unexpected end of tokens." + BinarySection());
 			}
 
 			bool isAtEnd() const { return m_pos >= m_tokens.size(); }
@@ -94,7 +94,11 @@ namespace dlang
 						parseFunctionDefinition();
 						return;
 					}
-					if (token.value == "return") {
+					if (tokenHash == consts::KEYWORD_FOR) {
+						parseForRange();
+						return;
+					}
+					if (tokenHash == consts::KEYWORD_RETURN) {
 						consume(); // Consume 'return' token
 						parseReturn();
 						return;
@@ -440,14 +444,44 @@ namespace dlang
 				size_t jumpIfFalsePos = m_bytecode.size();
 				for (int i = 0; i < 4; i++) m_bytecode.push_back(0);
 
-				while (!isAtEnd() && peek().value[0] != '}')
+				// Parse de statements binnen het IF-blok
+				while (!isAtEnd() && peek().value != "}")
 				{
 					parseStatement();
 				}
-
 				consume(); // Consume '}' token
-				int32_t endOfIf = static_cast<int32_t>(m_bytecode.size());
-				helpers::memory::patchInt32LE(endOfIf, m_bytecode, jumpIfFalsePos);
+
+				if (!isAtEnd() && peek().value == "else")
+				{
+					consume(); // Consume 'else' token
+
+					m_bytecode.push_back(Opcode::JUMP);
+					size_t jumpToEndPos = m_bytecode.size();
+					for (int i = 0; i < 4; i++) m_bytecode.push_back(0);
+
+					int32_t startOfElse = static_cast<int32_t>(m_bytecode.size());
+					helpers::memory::patchInt32LE(startOfElse, m_bytecode, jumpIfFalsePos);
+
+					if (!isAtEnd() && peek().value == "{")
+					{
+						consume(); // Consume '{' token
+						while (!isAtEnd() && peek().value != "}")
+						{
+							parseStatement();
+						}
+						consume(); // Consume '}' token
+					}
+					else if (!isAtEnd() && peek().value == "if")
+						parseIf();
+
+					int32_t endOfEverything = static_cast<int32_t>(m_bytecode.size());
+					helpers::memory::patchInt32LE(endOfEverything, m_bytecode, jumpToEndPos);
+				}
+				else
+				{
+					int32_t endOfIf = static_cast<int32_t>(m_bytecode.size());
+					helpers::memory::patchInt32LE(endOfIf, m_bytecode, jumpIfFalsePos);
+				}
 			}
 
 			void parseFunctionDefinition()
@@ -512,6 +546,73 @@ namespace dlang
 				auto tokens = includedLexer.GetTokens();
 
 				m_tokens.insert(m_tokens.begin() + m_pos, tokens.begin(), tokens.end());
+			}
+
+			void parseForRange()
+			{
+				consume();
+				consume();
+
+				std::string varName = peek().value;
+				consume();
+				consume();
+
+				parseExpression();
+				consume();
+
+				m_bytecode.push_back(Opcode::STORE_VAR);
+				emitString(varName);
+
+				size_t conditionStartPos = m_bytecode.size();
+
+				m_bytecode.push_back(Opcode::LOAD_VAR);
+				emitString(varName);
+
+				parseExpression();
+
+				m_bytecode.push_back(Opcode::LESS_THAN);
+
+				m_bytecode.push_back(Opcode::JUMP_IF_FALSE);
+				size_t jumpIfFalsePos = m_bytecode.size();
+				for (int i = 0; i < 4; i++) m_bytecode.push_back(0);
+
+				bool hasCustomStep = false;
+				if (peek().value == ",")
+				{
+					consume();
+					parseExpression();
+					hasCustomStep = true;
+				}
+
+				consume();
+				consume();
+
+				while (!isAtEnd() && peek().value != "}")
+				{
+					parseStatement();
+				}
+				consume();
+
+				m_bytecode.push_back(Opcode::LOAD_VAR);
+				emitString(varName);
+
+				if (hasCustomStep) {
+
+				}
+				else {
+					m_bytecode.push_back(Opcode::PUSH_INT);
+					helpers::memory::writeInt32LE(1, m_bytecode);
+				}
+
+				m_bytecode.push_back(Opcode::ADD);
+				m_bytecode.push_back(Opcode::STORE_VAR);
+				emitString(varName);
+
+				m_bytecode.push_back(Opcode::JUMP);
+				helpers::memory::writeInt32LE(static_cast<int32_t>(conditionStartPos), m_bytecode);
+
+				size_t endOfLoopPos = m_bytecode.size();
+				helpers::memory::patchInt32LE(static_cast<int32_t>(endOfLoopPos), m_bytecode, jumpIfFalsePos);
 			}
 		};
 	}

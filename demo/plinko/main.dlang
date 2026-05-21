@@ -1,0 +1,15 @@
+var backgroundColor = gfx.color(60, 60, 60)
+
+gfx.init('Plinko', 800, 600)
+
+while(gfx.window_closed() == 0)
+{
+	var deltaTime = gfx.get_deltatime()
+	gfx.begin()
+	gfx.clear(backgroundColor)
+	
+	
+	
+	gfx.end()
+	gfx.update()
+}

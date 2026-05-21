@@ -134,7 +134,9 @@ namespace dlang
 					hashValue == consts::KEYWORD_WHILE ||
 					hashValue == consts::KEYWORD_IF ||
 					hashValue == consts::KEYWORD_FUNC ||
-					hashValue == consts::KEYWORD_RETURN)
+					hashValue == consts::KEYWORD_RETURN ||
+					hashValue == consts::KEYWORD_ELSE ||
+					hashValue == consts::KEYWORD_FOR)
 				{
 					m_tokens.push_back({ TokenType::KEYWORD, buffer, m_line });
 				}

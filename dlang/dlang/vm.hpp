@@ -648,9 +648,16 @@ namespace dlang
 						else throw std::runtime_error("[VM]: Attempting to index a non-map/array object.");
 					} break;
 
-					default:
-						throw std::runtime_error("[VM]: Unknown opcode: " + std::to_string(byte));
-						break;
+					default: {
+						std::stringstream bytesStr;
+						for (int j = (i - 20); j < i; j++) {
+							if (j >= 0)
+								bytesStr << std::hex << static_cast<int>(bytes[j]) << " ";
+						}
+
+
+						throw std::runtime_error("[VM]: Unknown opcode: " + std::to_string(byte) + ", dump: " + bytesStr.str());
+					} break;
 					}
 				}
 			}

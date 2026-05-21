@@ -4,11 +4,18 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include "zlib.h"
 #include "curl/curl.h"
 #include "json.hpp"
 #include <mutex>
 #include "../templates/cmakelist.hpp"
 #include "../templates/entry.hpp"
+
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "zlib.lib")
+#pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "libcurl.lib")
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
