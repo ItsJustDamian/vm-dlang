@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DLang Docs</title>
+  <meta name="description" content="Documentation for DLang with quick start, syntax, and functions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">D</div>
+        <div>
+          <p class="eyebrow">DLang</p>
+          <h1>Docs</h1>
+        </div>
+      </div>
+
+      <div class="sidebar-panel">
+        <label class="search-label" for="search">Search a topic</label>
+        <input id="search" type="search" placeholder="For example math or if" />
+      </div>
+
+      <nav class="nav-group" aria-label="Documentation navigation">
+        <div class="nav-header">Quick start</div>
+        <div id="quickLinks" class="nav-list"></div>
+
+        <div class="nav-header">All options</div>
+        <div id="featureLinks" class="nav-list"></div>
+
+        <div class="nav-header">Native API</div>
+        <div id="nativeLinks" class="nav-list"></div>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <p class="eyebrow" id="pageTag">Documentation</p>
+        <h2 id="pageTitle">Loading...</h2>
+        <p id="pageSummary" class="summary"></p>
+      </section>
+
+      <section class="content-grid">
+        <article class="doc-panel">
+          <div id="detailHeader" class="detail-header"></div>
+          <div id="detailBody" class="detail-body"></div>
+        </article>
+
+        <aside class="doc-panel side-panel">
+          <h3>Quick Reference</h3>
+          <div id="referenceCards" class="reference-cards"></div>
+          <h3 class="side-section-title">Syntax Colors</h3>
+          <div id="syntaxCards" class="reference-cards"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
