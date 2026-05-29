@@ -60,7 +60,7 @@ namespace dlang::functions::utils
 				size = sizeof(float);
 				break;
 			case DlangType::String:
-				size = sizeof(std::string);
+				size = vm->getStringFromPool(typeObj.intValue).size();
 				break;
 			case DlangType::Boolean:
 				size = sizeof(bool);
