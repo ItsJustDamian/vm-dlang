@@ -762,6 +762,7 @@ int main(int, char**)
             ImGui::BeginChild("EditorArea", ImVec2(0, editorHeight), false);
             ImGui::PushFont(codeFont);
             editor.Render("TextEditor");
+            //AutoComplete::DrawDLangAutocomplete(editor);
             ImGui::PopFont();
             ImGui::EndChild();
 

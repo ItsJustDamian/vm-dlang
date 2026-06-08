@@ -236,6 +236,15 @@
     <ClInclude Include="dependencies\soloud\stb_vorbis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dlang\utils\math.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\sha1.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dlang\utils\os.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.dlang" />

@@ -710,6 +710,28 @@ void TextEditor::HandleKeyboardInputs()
 		io.WantCaptureKeyboard = true;
 		io.WantTextInput = true;
 
+		if (mAutocompleteOpen && !mAutocompleteMatches.empty())
+		{
+			if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+				mAutocompleteIndex = (mAutocompleteIndex + 1) % mAutocompleteMatches.size();
+				return; // Stop verdere verwerking van de editor!
+			}
+			if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+				mAutocompleteIndex = (mAutocompleteIndex - 1 + mAutocompleteMatches.size()) % mAutocompleteMatches.size();
+				return; // Stop verdere verwerking van de editor!
+			}
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter) || ImGui::IsKeyPressed(ImGuiKey_Tab)) {
+				// Injecteer het geselecteerde woord
+				InsertText(mAutocompleteMatches[mAutocompleteIndex].substr(mAutocompleteCurrentWord.length()));
+				mAutocompleteOpen = false;
+				return; // Blokkeer de daadwerkelijke nieuwe regel / tab!
+			}
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+				mAutocompleteOpen = false;
+				return;
+			}
+		}
+
 		if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
 			Undo();
 		else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
@@ -1114,6 +1136,11 @@ void TextEditor::Render()
 		EnsureCursorVisible();
 		ImGui::SetWindowFocus();
 		mScrollToCursor = false;
+	}
+
+	if (!IsReadOnly() && ImGui::IsWindowFocused()) {
+		UpdateAutocompleteMatches();
+		RenderAutocomplete();
 	}
 }
 
@@ -2086,6 +2113,82 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 	return p;
 }
 
+void TextEditor::UpdateAutocompleteMatches()
+{
+	auto cursor = GetActualCursorCoordinates();
+	if (cursor.mLine >= (int)mLines.size()) {
+		mAutocompleteOpen = false;
+		return;
+	}
+
+	auto& line = mLines[cursor.mLine];
+	int colIndex = GetCharacterIndex(cursor);
+
+	mAutocompleteCurrentWord.clear();
+	int i = colIndex - 1;
+	while (i >= 0 && (isalnum(line[i].mChar) || line[i].mChar == '_' || line[i].mChar == '.')) {
+		mAutocompleteCurrentWord = std::string(1, line[i].mChar) + mAutocompleteCurrentWord;
+		i--;
+	}
+
+	if (mAutocompleteCurrentWord.empty()) {
+		mAutocompleteOpen = false;
+		return;
+	}
+
+	mAutocompleteMatches.clear();
+
+	for (const auto& k : mLanguageDefinition.mKeywords) {
+		if (k.rfind(mAutocompleteCurrentWord, 0) == 0 && k != mAutocompleteCurrentWord)
+			mAutocompleteMatches.push_back(k);
+	}
+	for (const auto& pair : mLanguageDefinition.mIdentifiers) {
+		if (pair.first.rfind(mAutocompleteCurrentWord, 0) == 0 && pair.first != mAutocompleteCurrentWord)
+			mAutocompleteMatches.push_back(pair.first);
+	}
+
+	if (mAutocompleteMatches.empty()) {
+		mAutocompleteOpen = false;
+	}
+	else {
+		std::sort(mAutocompleteMatches.begin(), mAutocompleteMatches.end());
+		mAutocompleteOpen = true;
+	}
+}
+
+void TextEditor::RenderAutocomplete()
+{
+	if (!mAutocompleteOpen || mAutocompleteMatches.empty()) return;
+
+	auto cursor = GetActualCursorCoordinates();
+	ImVec2 editorPos = ImGui::GetWindowPos();
+	float scrollX = ImGui::GetScrollX();
+	float scrollY = ImGui::GetScrollY();
+
+	float cx = TextDistanceToLineStart(cursor);
+
+	float posX = editorPos.x + mTextStart + cx - scrollX + ImGui::GetStyle().WindowPadding.x;
+	float posY = editorPos.y + ((cursor.mLine + 1) * mCharAdvance.y) - scrollY + ImGui::GetStyle().WindowPadding.y;
+
+	ImGui::SetNextWindowPos(ImVec2(posX, posY));
+
+	ImGuiWindowFlags popupFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_HorizontalScrollbar |
+		ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing;
+
+	if (ImGui::Begin("##CoreAutocompletePopup", nullptr, popupFlags))
+	{
+		for (size_t i = 0; i < mAutocompleteMatches.size(); i++)
+		{
+			bool isSelected = ((int)i == mAutocompleteIndex);
+			if (ImGui::Selectable(mAutocompleteMatches[i].c_str(), isSelected)) {
+				InsertText(mAutocompleteMatches[i].substr(mAutocompleteCurrentWord.length()));
+				mAutocompleteOpen = false;
+			}
+		}
+	}
+	ImGui::End();
+}
 
 std::string TextEditor::GetText() const
 {

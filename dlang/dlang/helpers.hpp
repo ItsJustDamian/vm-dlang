@@ -9,12 +9,20 @@ namespace dlang
 	{
 		namespace memory
 		{
-			inline void writeInt32LE(uint32_t value, std::vector<uint8_t>& out)
+			inline void writeInt32LE(uint32_t value, std::vector<uint8_t>& out, size_t pos = -1)
 			{
-				out.push_back(static_cast<uint8_t>(value & 0xFF));
-				out.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
-				out.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
-				out.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
+				if (pos == -1) {
+					out.push_back(static_cast<uint8_t>(value & 0xFF));
+					out.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
+					out.push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
+					out.push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
+				}
+				else {
+					out[pos] = static_cast<uint8_t>(value & 0xFF);
+					out[pos + 1] = static_cast<uint8_t>((value >> 8) & 0xFF);
+					out[pos + 2] = static_cast<uint8_t>((value >> 16) & 0xFF);
+					out[pos + 3] = static_cast<uint8_t>((value >> 24) & 0xFF);
+				}
 			}
 
 			inline void patchInt32LE(int32_t value, std::vector<uint8_t>& bytecode, size_t pos)
