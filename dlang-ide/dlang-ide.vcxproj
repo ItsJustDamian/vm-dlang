@@ -109,6 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -124,6 +125,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -138,6 +140,8 @@
     <ClCompile Include="imgui-addons\TextEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="addons\cmakebuilder.hpp" />
+    <ClInclude Include="addons\cmakedownloader.hpp" />
     <ClInclude Include="addons\curl\curl.h" />
     <ClInclude Include="addons\curl\curlver.h" />
     <ClInclude Include="addons\curl\easy.h" />
@@ -152,8 +156,10 @@
     <ClInclude Include="addons\curl\websockets.h" />
     <ClInclude Include="addons\helpers.hpp" />
     <ClInclude Include="addons\json.hpp" />
+    <ClInclude Include="addons\scriptrunner.hpp" />
     <ClInclude Include="addons\zconf.h" />
     <ClInclude Include="addons\zlib.h" />
+    <ClInclude Include="globals.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_dx11.h" />
@@ -165,6 +171,7 @@
     <ClInclude Include="imgui-addons\TextEditor.h" />
     <ClInclude Include="templates\cmakelist.hpp" />
     <ClInclude Include="templates\entry.hpp" />
+    <ClInclude Include="ui.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="libcurl.lib" />
