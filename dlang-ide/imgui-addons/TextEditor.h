@@ -145,6 +145,10 @@ public:
 		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
 			mComment(false), mMultiLineComment(false), mPreprocessor(false) {
 		}
+
+		std::string toString() const {
+			return std::string(1, static_cast<char>(mChar));
+		}
 	};
 
 	typedef std::vector<Glyph> Line;
@@ -269,7 +273,15 @@ public:
 	static const Palette& GetLightPalette();
 	static const Palette& GetRetroBluePalette();
 
+	void UpdateAutocompleteMatches();
+	void RenderAutocomplete();
+
 private:
+	bool mAutocompleteOpen = false;
+	int mAutocompleteIndex = 0;
+	std::vector<std::string> mAutocompleteMatches;
+	std::string mAutocompleteCurrentWord;
+
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
 
 	struct EditorState

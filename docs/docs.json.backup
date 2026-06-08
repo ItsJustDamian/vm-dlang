@@ -1,0 +1,751 @@
+{
+  "site": {
+    "name": "DLang Docs",
+    "tagline": "A compact reference for the current core features of DLang.",
+    "description": "This first version is data-driven. Navigation and content come from a JSON file so the structure can later move directly into a database."
+  },
+  "syntax": {
+    "keywords": ["var", "func", "return", "if", "else", "while", "true", "false", "for"],
+    "builtins": [
+      "print", "messagebox", "sizeof",
+      "gfx.draw_circle", "gfx.color",
+      "gfx.init", "gfx.clear", "gfx.update",
+      "gfx.begin", "gfx.end", "gfx.draw_rect",
+      "gfx.draw_text", "gfx.key_pressed", "gfx.key_down",
+      "gfx.get_deltatime", "gfx.window_closed", "gfx.load_image",
+      "gfx.draw_image", "gfx.load_sound", "gfx.play_sound",
+      "math.abs", "math.sqrt", "math.pow", "math.floor", "math.ceil",
+      "math.round", "math.random_seed", "math.random", "math.sin",
+      "math.cos", "math.tan"
+    ],
+    "palette": [
+      { "name": "Keyword", "value": "#7dd3fc", "token": "var, func, if, else" },
+      { "name": "Built-in", "value": "#c4b5fd", "token": "print, math.random, gfx.draw_text" },
+      { "name": "String", "value": "#fda4af", "token": "\"text\" or 'text'" },
+      { "name": "Number", "value": "#fbbf24", "token": "10, 3.14, 42" },
+      { "name": "Comment", "value": "#94a3b8", "token": "// line comment" },
+      { "name": "Identifier", "value": "#86efac", "token": "variable names and dotted paths" },
+      { "name": "Punctuation", "value": "#f8fafc", "token": "(), {}, [], operators" }
+    ]
+  },
+  "quickStart": [
+    {
+      "id": "variables",
+      "title": "Variables",
+      "summary": "Create a variable with `var` and then use normal assignment or compound assignment.",
+      "badge": "Basics",
+      "sections": [
+        {
+          "title": "Example",
+          "type": "code",
+          "content": "var x = 10\n// update the value\nx = 20\n\nx += 5\nx -= 2\nx *= 3\nx /= 4"
+        },
+        {
+          "title": "Explanation",
+          "type": "text",
+          "content": "DLang supports direct expressions with arithmetic operators and compound assignments. This is the fastest way to update values in a script."
+        }
+      ]
+    },
+    {
+      "id": "control-flow",
+      "title": "Control Flow",
+      "summary": "Use `if`, `else if`, `else`, `while`, and `for` to control program flow.",
+      "badge": "Flow",
+      "sections": [
+        {
+          "title": "Example",
+          "type": "code",
+          "content": "if (x < 10) {\n    print(\"x is less than 10\\n\")\n} else if (x == 10) {\n    print(\"x is equal to 10\\n\")\n} else {\n    print(\"x is greater than 10\\n\")\n}\n\nwhile (x > 0) {\n    x -= 1\n}\n\nfor (i, 0, 10) {\n    print(i + '\\n')\n}"
+        },
+        {
+          "title": "Explanation",
+          "type": "text",
+          "content": "`for (i, start, end)` gives you a compact counting loop. `while` is useful when the loop should stop based on a condition that changes during execution."
+        }
+      ]
+    },
+    {
+      "id": "functions",
+      "title": "Functions",
+      "summary": "Define reusable logic with `func` and return values with `return`.",
+      "badge": "Reusable",
+      "sections": [
+        {
+          "title": "Example",
+          "type": "code",
+          "content": "func add(a, b) {\n    return a + b\n}\n\nvar result = add(5, 10)"
+        },
+        {
+          "title": "Explanation",
+          "type": "text",
+          "content": "Functions make logic testable and reusable. The documentation can later show parameters, return values, and examples for each function."
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "arrays",
+      "title": "Arrays",
+      "summary": "Create and read lists by index.",
+      "syntax": "var list = {1, 2, 3, 4}\nvar item = list[0]",
+      "details": "Useful for fixed sequences or collections where order matters."
+    },
+    {
+      "id": "objects",
+      "title": "Objects",
+      "summary": "Use key-value structures for structured data.",
+      "syntax": "var player = {\"name\": \"Damian\", \"level\": 99}\nplayer[\"level\"] = 100",
+      "details": "Great for records, settings, and data that should be described field by field."
+    },
+    {
+      "id": "printing",
+      "title": "Output",
+      "summary": "Print text and combine values into a message.",
+      "syntax": "print(\"Player data \" + player + '(' + sizeof(player) + ')\\n')",
+      "details": "Use `print` for quick feedback in scripts and examples."
+    },
+    {
+      "id": "math",
+      "title": "Math Module",
+      "summary": "Random values, absolute value, roots, powers, and trigonometry.",
+      "syntax": "math.random_seed()\nmath.random(10)\nmath.abs(-5)\nmath.sqrt(16)\nmath.pow(2, 3)\nmath.floor(4.7)\nmath.ceil(4.2)\nmath.round(4.5)\nmath.sin(1.5708)\nmath.cos(3.1415)\nmath.tan(0.7854)",
+      "details": "The current math surface is broad enough to support both simple calculations and small simulations."
+    },
+    {
+      "id": "graphics",
+      "title": "Graphics Library",
+      "summary": "Window setup, drawing, input, timing, images, and sound for game-style apps.",
+      "sections": [
+        {
+          "title": "Window and frame loop",
+          "type": "code",
+          "content": "gfx.init('Flappy Bird', 400, 600)\n\nwhile (gfx.window_closed() != 1) {\n    var deltaTime = gfx.get_deltatime()\n\n    gfx.begin()\n    gfx.clear(backgroundColor)\n\n    // draw game objects here\n\n    gfx.end()\n    gfx.update()\n}"
+        },
+        {
+          "title": "Drawing and colors",
+          "type": "code",
+          "content": "var backgroundColor = gfx.color(60, 187, 207)\nvar titleColor = gfx.color(255, 215, 0)\n\ngfx.draw_text('FLAPPY BIRD', 0.0, 150.0, titleColor, 1)\ngfx.draw_image(images['flappy'], player['x'], player['y'], 128.0, 128.0)\ngfx.draw_rect(50.0, 50.0, 100.0, 40.0)"
+        },
+        {
+          "title": "Input and timing",
+          "type": "code",
+          "content": "if (gfx.key_pressed(32)) {\n    player['velocityY'] = player['jumpForce']\n}\n\nif (gfx.key_pressed('space')) {\n    gfx.play_sound(sounds['fly'])\n}\n\nvar deltaTime = gfx.get_deltatime()"
+        },
+        {
+          "title": "Assets and audio",
+          "type": "code",
+          "content": "var images = {\n    'flappy': gfx.load_image('assets/flappy.png'),\n    'top_pipe': gfx.load_image('assets/top_pipe.png'),\n    'bottom_pipe': gfx.load_image('assets/bottom_pipe.png'),\n    'cloud': gfx.load_image('assets/cloud.png')\n}\n\nvar sounds = {\n    'die': gfx.load_sound('assets/die.wav'),\n    'fly': gfx.load_sound('assets/fly.wav'),\n    'point': gfx.load_sound('assets/point.wav')\n}"
+        },
+        {
+          "title": "What this library covers",
+          "type": "text",
+          "content": "The flappy source shows the current graphics surface: `gfx.init`, `gfx.begin`, `gfx.end`, `gfx.update`, `gfx.clear`, `gfx.draw_image`, `gfx.draw_text`, `gfx.draw_rect`, `gfx.draw_circle`, `gfx.color`, `gfx.load_image`, `gfx.load_sound`, `gfx.play_sound`, `gfx.key_pressed`, `gfx.key_down`, `gfx.get_deltatime`, and `gfx.window_closed`."
+        }
+      ]
+    },
+    {
+      "id": "messagebox",
+      "title": "Message Box",
+      "summary": "Show a simple dialog for tests or user feedback.",
+      "syntax": "messagebox(\"Test Title\", \"Test message\")",
+      "details": "Good for demos or confirmation moments during development."
+    }
+  ],
+  "nativeApi": [
+    {
+      "category": "utils",
+      "title": "Utilities",
+      "summary": "Console output, message boxes, and size helpers.",
+      "functions": [
+        {
+          "id": "print",
+          "title": "print",
+          "summary": "Print one or more values to the console.",
+          "signature": "print(value1, value2, ...)",
+          "description": "Prints every value currently on the stack in order. The function accepts multiple values and does not add separators or a trailing newline.",
+          "params": [
+            {
+              "name": "value",
+              "type": "any",
+              "description": "Any DLang value supported by the VM, including integers, floats, strings, arrays, and maps."
+            }
+          ],
+          "returns": "void",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "print('Score: ')\nprint(score)\nprint('\\n')"
+            }
+          ],
+          "notes": "Use this for debugging and lightweight output."
+        },
+        {
+          "id": "messagebox",
+          "title": "messagebox",
+          "summary": "Show a native Windows message box.",
+          "signature": "messagebox(title, message)",
+          "description": "Opens a native message box using the provided title and message text.",
+          "params": [
+            {
+              "name": "title",
+              "type": "string",
+              "description": "The window title shown in the dialog."
+            },
+            {
+              "name": "message",
+              "type": "string",
+              "description": "The message body shown to the user."
+            }
+          ],
+          "returns": "void",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "messagebox('Test Title', 'Test message')"
+            }
+          ],
+          "notes": "Useful for quick prompts and debugging dialogs."
+        },
+        {
+          "id": "sizeof",
+          "title": "sizeof",
+          "summary": "Get the size of a primitive value or collection.",
+          "signature": "sizeof(value)",
+          "description": "Returns the size of a primitive type or the element count for arrays and maps.",
+          "params": [
+            {
+              "name": "value",
+              "type": "any",
+              "description": "The value to inspect."
+            }
+          ],
+          "returns": "integer",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "print(sizeof(player))\nprint(sizeof(numbers))"
+            }
+          ],
+          "notes": "For strings, the current implementation returns the size of std::string, not the visible text length."
+        }
+      ]
+    },
+    {
+      "category": "math",
+      "title": "Math",
+      "summary": "Random numbers and common math helpers.",
+      "functions": [
+        {
+          "id": "math-random-seed",
+          "title": "math.random_seed",
+          "summary": "Seed the random number generator.",
+          "signature": "math.random_seed([seed])",
+          "description": "Seeds the built-in random generator. If no seed is provided, the current time is used.",
+          "params": [
+            {
+              "name": "seed",
+              "type": "integer (optional)",
+              "description": "The seed value to use. When omitted, time-based seeding is used."
+            }
+          ],
+          "returns": "void",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.random_seed()\nmath.random_seed(12345)"
+            }
+          ],
+          "notes": "Call this once at startup if you want reproducible random values."
+        },
+        {
+          "id": "math-random",
+          "title": "math.random",
+          "summary": "Generate an integer in a range.",
+          "signature": "math.random(max)\nmath.random(min, max)",
+          "description": "Returns an integer between the given bounds, inclusive.",
+          "params": [
+            {
+              "name": "max",
+              "type": "integer",
+              "description": "The upper bound when only one argument is used."
+            },
+            {
+              "name": "min",
+              "type": "integer",
+              "description": "The lower bound when two arguments are used."
+            }
+          ],
+          "returns": "integer",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "var a = math.random(10)\nvar b = math.random(5, 20)"
+            }
+          ],
+          "notes": "The current implementation expects integer bounds."
+        },
+        {
+          "id": "math-abs",
+          "title": "math.abs",
+          "summary": "Return the absolute value.",
+          "signature": "math.abs(value)",
+          "description": "Returns the absolute value for integers and floats.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The numeric value to make positive."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.abs(-5)\nmath.abs(-3.14)"
+            }
+          ]
+        },
+        {
+          "id": "math-sqrt",
+          "title": "math.sqrt",
+          "summary": "Return the square root.",
+          "signature": "math.sqrt(value)",
+          "description": "Returns the square root of an integer or float input.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to square-root."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.sqrt(16)\nmath.sqrt(25.0)"
+            }
+          ]
+        },
+        {
+          "id": "math-pow",
+          "title": "math.pow",
+          "summary": "Raise a base to an exponent.",
+          "signature": "math.pow(base, exponent)",
+          "description": "Raises the base value to the given exponent. Integer inputs produce an integer result when possible; mixed numeric input returns a float.",
+          "params": [
+            {
+              "name": "base",
+              "type": "number",
+              "description": "The base value."
+            },
+            {
+              "name": "exponent",
+              "type": "number",
+              "description": "The exponent to apply."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.pow(2, 3)\nmath.pow(2.5, 2.0)"
+            }
+          ]
+        },
+        {
+          "id": "math-floor",
+          "title": "math.floor",
+          "summary": "Round down.",
+          "signature": "math.floor(value)",
+          "description": "Rounds a value down to the nearest integer.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to round down."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.floor(5)\nmath.floor(4.7)"
+            }
+          ]
+        },
+        {
+          "id": "math-ceil",
+          "title": "math.ceil",
+          "summary": "Round up.",
+          "signature": "math.ceil(value)",
+          "description": "Rounds a value up to the nearest integer.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to round up."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.ceil(5)\nmath.ceil(4.2)"
+            }
+          ]
+        },
+        {
+          "id": "math-round",
+          "title": "math.round",
+          "summary": "Round to the nearest integer.",
+          "signature": "math.round(value)",
+          "description": "Rounds a value using standard nearest-integer rounding.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The value to round."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.round(5)\nmath.round(4.5)"
+            }
+          ]
+        },
+        {
+          "id": "math-sin",
+          "title": "math.sin",
+          "summary": "Return the sine of an angle.",
+          "signature": "math.sin(value)",
+          "description": "Computes the sine of the input angle in radians.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The angle in radians."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.sin(0)\nmath.sin(1.5708)"
+            }
+          ]
+        },
+        {
+          "id": "math-cos",
+          "title": "math.cos",
+          "summary": "Return the cosine of an angle.",
+          "signature": "math.cos(value)",
+          "description": "Computes the cosine of the input angle in radians.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The angle in radians."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.cos(0)\nmath.cos(3.1415)"
+            }
+          ]
+        },
+        {
+          "id": "math-tan",
+          "title": "math.tan",
+          "summary": "Return the tangent of an angle.",
+          "signature": "math.tan(value)",
+          "description": "Computes the tangent of the input angle in radians.",
+          "params": [
+            {
+              "name": "value",
+              "type": "number",
+              "description": "The angle in radians."
+            }
+          ],
+          "returns": "number",
+          "examples": [
+            {
+              "title": "Example",
+              "code": "math.tan(0)\nmath.tan(0.7854)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "graphics",
+      "title": "Graphics",
+      "summary": "Windowing, drawing, input, timing, assets, and sound.",
+      "functions": [
+        {
+          "id": "gfx-color",
+          "title": "gfx.color",
+          "summary": "Create a reusable color entry.",
+          "signature": "gfx.color(r, g, b[, a])",
+          "description": "Creates a color entry and returns its index. The alpha channel is optional and defaults to 255.",
+          "params": [
+            { "name": "r", "type": "integer", "description": "Red channel from 0 to 255." },
+            { "name": "g", "type": "integer", "description": "Green channel from 0 to 255." },
+            { "name": "b", "type": "integer", "description": "Blue channel from 0 to 255." },
+            { "name": "a", "type": "integer (optional)", "description": "Alpha channel from 0 to 255. Defaults to 255." }
+          ],
+          "returns": "integer",
+          "examples": [
+            { "title": "Example", "code": "var backgroundColor = gfx.color(60, 187, 207)\nvar titleColor = gfx.color(255, 215, 0)" }
+          ]
+        },
+        {
+          "id": "gfx-init",
+          "title": "gfx.init",
+          "summary": "Create the window and initialize rendering.",
+          "signature": "gfx.init(title, width, height)",
+          "description": "Initializes the window, Direct2D, text rendering, image loading, and audio.",
+          "params": [
+            { "name": "title", "type": "string", "description": "Window title." },
+            { "name": "width", "type": "integer", "description": "Window width in pixels." },
+            { "name": "height", "type": "integer", "description": "Window height in pixels." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.init('Flappy Bird', 400, 600)" }
+          ],
+          "notes": "Call this once before drawing or loading assets."
+        },
+        {
+          "id": "gfx-clear",
+          "title": "gfx.clear",
+          "summary": "Fill the frame with a background color.",
+          "signature": "gfx.clear(colorIndex)",
+          "description": "Clears the render target using a color that was created with gfx.color.",
+          "params": [
+            { "name": "colorIndex", "type": "integer", "description": "Index returned by gfx.color." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.clear(backgroundColor)" }
+          ]
+        },
+        {
+          "id": "gfx-update",
+          "title": "gfx.update",
+          "summary": "Process input and compute delta time.",
+          "signature": "gfx.update()",
+          "description": "Updates the internal delta time and pumps the Windows message loop.",
+          "params": [],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.update()" }
+          ]
+        },
+        {
+          "id": "gfx-begin",
+          "title": "gfx.begin",
+          "summary": "Start a new frame.",
+          "signature": "gfx.begin()",
+          "description": "Begins a Direct2D draw pass for the current frame.",
+          "params": [],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.begin()" }
+          ]
+        },
+        {
+          "id": "gfx-end",
+          "title": "gfx.end",
+          "summary": "Finish the current frame.",
+          "signature": "gfx.end()",
+          "description": "Ends the current Direct2D draw pass.",
+          "params": [],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.end()" }
+          ]
+        },
+        {
+          "id": "gfx-draw-rect",
+          "title": "gfx.draw_rect",
+          "summary": "Draw a rectangle outline or fill.",
+          "signature": "gfx.draw_rect(x, y, width, height, colorIndex[, filled])",
+          "description": "Draws a rectangle using coordinates, size, and a color index. Set filled to 1 to fill the rectangle; otherwise it is drawn as an outline.",
+          "params": [
+            { "name": "x", "type": "number", "description": "Left coordinate." },
+            { "name": "y", "type": "number", "description": "Top coordinate." },
+            { "name": "width", "type": "number", "description": "Rectangle width." },
+            { "name": "height", "type": "number", "description": "Rectangle height." },
+            { "name": "colorIndex", "type": "integer", "description": "Index returned by gfx.color." },
+            { "name": "filled", "type": "integer (optional)", "description": "Use 1 to fill, anything else draws only the outline." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.draw_rect(50.0, 50.0, 100.0, 40.0, titleColor, 1)" }
+          ]
+        },
+        {
+          "id": "gfx-draw-circle",
+          "title": "gfx.draw_circle",
+          "summary": "Draw a circle outline or fill.",
+          "signature": "gfx.draw_circle(x, y, radius, colorIndex[, filled])",
+          "description": "Draws a circle using the given center point, radius, and color index. Set filled to 1 to fill the circle.",
+          "params": [
+            { "name": "x", "type": "number", "description": "Center X coordinate." },
+            { "name": "y", "type": "number", "description": "Center Y coordinate." },
+            { "name": "radius", "type": "number", "description": "Circle radius." },
+            { "name": "colorIndex", "type": "integer", "description": "Index returned by gfx.color." },
+            { "name": "filled", "type": "integer (optional)", "description": "Use 1 to fill, anything else draws only the outline." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.draw_circle(120.0, 120.0, 24.0, titleColor, 1)" }
+          ]
+        },
+        {
+          "id": "gfx-draw-text",
+          "title": "gfx.draw_text",
+          "summary": "Draw text on screen with optional alignment.",
+          "signature": "gfx.draw_text(text, x, y, colorIndex[, hAlign[, vAlign]])",
+          "description": "Draws a text string in the current font and can optionally align it horizontally and vertically.",
+          "params": [
+            { "name": "text", "type": "string", "description": "Text to render." },
+            { "name": "x", "type": "number", "description": "Left or anchor X coordinate." },
+            { "name": "y", "type": "number", "description": "Top or anchor Y coordinate." },
+            { "name": "colorIndex", "type": "integer", "description": "Index returned by gfx.color." },
+            { "name": "hAlign", "type": "integer (optional)", "description": "0 = left, 1 = center, 2 = right." },
+            { "name": "vAlign", "type": "integer (optional)", "description": "0 = top, 1 = center, 2 = bottom." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.draw_text('FLAPPY BIRD', 0.0, 150.0, titleColor, 1)" }
+          ]
+        },
+        {
+          "id": "gfx-key-pressed",
+          "title": "gfx.key_pressed",
+          "summary": "Check whether a key was pressed this frame.",
+          "signature": "gfx.key_pressed(key)",
+          "description": "Returns true only on the first frame the key becomes pressed.",
+          "params": [
+            { "name": "key", "type": "integer or string", "description": "A virtual key code or a key name such as 'space', 'left', or 'enter'." }
+          ],
+          "returns": "boolean",
+          "examples": [
+            { "title": "Example", "code": "if (gfx.key_pressed('space')) {\n    player['velocityY'] = player['jumpForce']\n}" }
+          ]
+        },
+        {
+          "id": "gfx-key-down",
+          "title": "gfx.key_down",
+          "summary": "Check whether a key is currently held down.",
+          "signature": "gfx.key_down(key)",
+          "description": "Returns true while the key remains pressed.",
+          "params": [
+            { "name": "key", "type": "integer or string", "description": "A virtual key code or a key name." }
+          ],
+          "returns": "boolean",
+          "examples": [
+            { "title": "Example", "code": "if (gfx.key_down('left')) {\n    player['x'] -= 120.0 * deltaTime\n}" }
+          ]
+        },
+        {
+          "id": "gfx-get-deltatime",
+          "title": "gfx.get_deltatime",
+          "summary": "Get the time since the previous frame.",
+          "signature": "gfx.get_deltatime()",
+          "description": "Returns the measured frame time in seconds as a float.",
+          "params": [],
+          "returns": "float",
+          "examples": [
+            { "title": "Example", "code": "var deltaTime = gfx.get_deltatime()" }
+          ]
+        },
+        {
+          "id": "gfx-window-closed",
+          "title": "gfx.window_closed",
+          "summary": "Check whether the window is closed.",
+          "signature": "gfx.window_closed()",
+          "description": "Returns 1 when the window should exit, otherwise 0.",
+          "params": [],
+          "returns": "boolean-like integer",
+          "examples": [
+            { "title": "Example", "code": "while (gfx.window_closed() != 1) {\n    gfx.update()\n}" }
+          ]
+        },
+        {
+          "id": "gfx-load-image",
+          "title": "gfx.load_image",
+          "summary": "Load an image file and get a texture index.",
+          "signature": "gfx.load_image(filePath)",
+          "description": "Loads an image from disk, creates a texture, and returns the texture index.",
+          "params": [
+            { "name": "filePath", "type": "string", "description": "Path to the image file on disk." }
+          ],
+          "returns": "integer",
+          "examples": [
+            { "title": "Example", "code": "var flappyTexture = gfx.load_image('assets/flappy.png')" }
+          ]
+        },
+        {
+          "id": "gfx-draw-image",
+          "title": "gfx.draw_image",
+          "summary": "Draw a texture on screen.",
+          "signature": "gfx.draw_image(textureIndex, x, y[, width, height])",
+          "description": "Draws a loaded texture at the given position. Optional width and height override the texture size.",
+          "params": [
+            { "name": "textureIndex", "type": "integer", "description": "Index returned by gfx.load_image." },
+            { "name": "x", "type": "number", "description": "Left coordinate." },
+            { "name": "y", "type": "number", "description": "Top coordinate." },
+            { "name": "width", "type": "number (optional)", "description": "Override width." },
+            { "name": "height", "type": "number (optional)", "description": "Override height." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.draw_image(images['flappy'], player['x'], player['y'], 128.0, 128.0)" }
+          ]
+        },
+        {
+          "id": "gfx-load-sound",
+          "title": "gfx.load_sound",
+          "summary": "Load an audio file and get a sound index.",
+          "signature": "gfx.load_sound(filePath)",
+          "description": "Loads an audio file and returns a reusable sound index.",
+          "params": [
+            { "name": "filePath", "type": "string", "description": "Path to the audio file on disk." }
+          ],
+          "returns": "integer",
+          "examples": [
+            { "title": "Example", "code": "var flySound = gfx.load_sound('assets/fly.wav')" }
+          ]
+        },
+        {
+          "id": "gfx-play-sound",
+          "title": "gfx.play_sound",
+          "summary": "Play a previously loaded sound.",
+          "signature": "gfx.play_sound(soundIndex[, volume[, loop]])",
+          "description": "Plays a loaded sound with optional volume and loop settings.",
+          "params": [
+            { "name": "soundIndex", "type": "integer", "description": "Index returned by gfx.load_sound." },
+            { "name": "volume", "type": "number (optional)", "description": "Playback volume. Defaults to 1.0." },
+            { "name": "loop", "type": "integer (optional)", "description": "Use 1 to loop the sound, 0 to play once." }
+          ],
+          "returns": "void",
+          "examples": [
+            { "title": "Example", "code": "gfx.play_sound(sounds['fly'])\ngfx.play_sound(sounds['point'], 0.8, 1)" }
+          ]
+        }
+      ]
+    }
+  ],
+  "reference": [
+    { "name": "Syntax style", "value": "Parentheses for calls, braces for blocks, square brackets for indexing." },
+    { "name": "Strings", "value": "Double and single quotes are used in examples. Keep it consistent per file." }
+  ]
+}

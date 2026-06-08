@@ -213,8 +213,10 @@
     <ClInclude Include="dlang\structs.hpp" />
     <ClInclude Include="dlang\utils\graphics.hpp" />
     <ClInclude Include="dlang\utils\math.hpp" />
+    <ClInclude Include="dlang\utils\os.hpp" />
     <ClInclude Include="dlang\utils\utils.hpp" />
     <ClInclude Include="dlang\vm.hpp" />
+    <ClInclude Include="tools\sha1.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="main.dlang" />

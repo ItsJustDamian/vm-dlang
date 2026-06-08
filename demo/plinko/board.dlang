@@ -1,0 +1,20 @@
+var backgroundColor = gfx.color(60, 187, 207)
+
+var width = 800
+var height = 600
+var rowCount = 8
+var colCount = 8
+
+gfx.init('Flappy Bird', 800, 600)
+
+while (gfx.window_closed() != 1) {
+    var deltaTime = gfx.get_deltatime()
+
+    gfx.begin()
+    gfx.clear(backgroundColor)
+
+    
+
+    gfx.end()
+    gfx.update()
+}

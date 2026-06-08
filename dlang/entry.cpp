@@ -7,6 +7,9 @@
 #include "dlang/utils/utils.hpp"
 #include "dlang/utils/graphics.hpp"
 #include "dlang/utils/math.hpp"
+#include "dlang/utils/os.hpp"
+
+#include "tools/sha1.hpp"
 
 int main(int argc, char** argv)
 {
@@ -43,6 +46,8 @@ int main(int argc, char** argv)
 				ss << "0x" << static_cast<int>((xorByte == -1 ? byteCode[i] : byteCode[i] ^ xorByte));
 				if(i != byteCode.size() - 1)
 					ss << ", ";
+
+				printf("0x%02X ", (xorByte == -1 ? byteCode[i] : byteCode[i] ^ xorByte));
 			}
 			ss << "};\n        }\n    }\n}\n";
 
@@ -53,6 +58,15 @@ int main(int argc, char** argv)
 				f.close();
 			}
 
+			std::string safeString;
+			safeString.resize(byteCode.size());
+			std::memcpy(&safeString[0], byteCode.data(), byteCode.size());
+
+			SHA1 sha1;
+			auto res = sha1.hash(safeString);
+
+			printf("Bytecode saved to bytecode.hpp with SHA1 hash: %s\n", res.c_str());
+
 			return 0;
 		}
 
@@ -60,6 +74,7 @@ int main(int argc, char** argv)
 		dlang::functions::utils::initFunctions(&vm);
 		dlang::functions::graphics::initFunctions(&vm);
 		dlang::functions::math::initFunctions(&vm);
+		dlang::functions::os::initFunctions(&vm);
 
 		vm.eval(parser.GetBytecode());
 

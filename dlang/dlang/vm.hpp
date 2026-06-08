@@ -87,7 +87,7 @@ namespace dlang
 				return true;
 			}
 
-		private:
+		public:
 			int addToStringPool(const std::string& str)
 			{
 				auto it = std::find(m_stringPool.begin(), m_stringPool.end(), str);
@@ -97,7 +97,7 @@ namespace dlang
 				m_stringPool.push_back(str);
 				return static_cast<int>(m_stringPool.size() - 1);
 			}
-		public:
+
 			std::string getStringFromPool(int index)
 			{
 				if (index >= 0 && index < m_stringPool.size())
