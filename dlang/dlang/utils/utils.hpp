@@ -97,6 +97,6 @@ namespace dlang::functions::utils
 			vm->push(DlangObject(vm->addToStringPool(newStr), dlang::DlangType::String));
 			return true;
 
-			}, "str", 1);
+			}, "str", 2);
 	}
 }
