@@ -81,5 +81,22 @@ namespace dlang::functions::utils
 			vm->push(DlangObject(size));
 			return true;
 		}, "*", 1);
+
+		vm->registerNativeFunction("substr", [](vm::DLangVirtualMachine* vm) -> bool {
+
+			auto lengthObj = DlangObject(-1);
+			if(vm->getStackSize() > 2)
+				lengthObj = vm->pop();
+			
+			auto startObj = vm->pop();
+			
+			auto strObj = vm->pop();
+			auto str = vm->getStringFromPool(strObj.intValue);
+			auto newStr = str.substr(startObj.intValue, (lengthObj.intValue == -1 ? str.length() : lengthObj.intValue));
+
+			vm->push(DlangObject(vm->addToStringPool(newStr), dlang::DlangType::String));
+			return true;
+
+			}, "str", 1);
 	}
 }
